@@ -5,7 +5,7 @@ import Catalogue from "../model/catalogue.js";
 export const createOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { catalogueId, total } = req.body;
+    const { catalogueId, total, measurements, measurementMethod, shipping } = req.body;
 
     if (!catalogueId || !total) {
       return res.status(400).json({ message: "catalogueId and total are required" });
@@ -15,12 +15,25 @@ export const createOrder = async (req, res) => {
     const catalogueItem = await Catalogue.findById(catalogueId);
     if (!catalogueItem) return res.status(404).json({ message: "Catalogue item not found" });
 
-    const order = await Order.create({
+    const orderData = {
       userId,
       catalogueId,
       designerId: catalogueItem.designer?.id || null,
       total,
-    });
+      status: 'pending',
+      paymentStatus: 'pending'
+    };
+
+    // Add optional measurements and shipping
+    if (measurements) {
+      orderData.measurements = measurements;
+      orderData.measurementMethod = measurementMethod || null;
+    }
+    if (shipping) {
+      orderData.shipping = shipping;
+    }
+
+    const order = await Order.create(orderData);
 
     res.status(201).json({ message: "Order created", order });
   } catch (err) {

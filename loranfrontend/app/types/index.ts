@@ -56,8 +56,31 @@ export interface Order {
   _id: string;
   userId: string;
   catalogueId: string;
-  status: 'pending' | 'processing' | 'completed' | 'cancelled';
-  paymentStatus?: 'pending' | 'paid' | 'failed';
+  status: 'pending' | 'processing' | 'completed' | 'cancelled' | 'confirmed';
+  paymentStatus: 'pending' | 'paid' | 'failed';
   total: number;
+  designerId?: string;
+  measurements?: {
+    height?: number;
+    chest?: number;
+    waist?: number;
+    hips?: number;
+    sleeveLength?: number;
+    notes?: string;
+  };
+  measurementMethod?: 'ai' | 'manual';
+  shipping?: {
+    name?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    postalCode?: string;
+    country?: string;
+  };
+  paymentReference?: string;
+  paymentMethod?: string;
+  metadata?: any;
+  notified?: { admin?: boolean; designer?: boolean };
   createdAt: string;
+  updatedAt?: string;
 }

@@ -62,15 +62,24 @@ export const webhookHandler = async (req, res) => {
 		const eventType = event.event;
 		const data = event.data;
 
-		if (data && data.status === 'success') {
-			const orderId = data.metadata?.orderId;
-			if (orderId) {
-				await Order.findByIdAndUpdate(orderId, { paymentStatus: 'paid', status: 'processing' });
-				console.log(`Order ${orderId} marked as paid via webhook`);
-			}
-		}
-
-		// Respond quickly to webhook
+    if (data && data.status === 'success') {
+      const orderId = data.metadata?.orderId;
+      const reference = data.reference;
+      if (orderId) {
+        // Update order: mark as paid, set to confirmed, save paymentReference
+        const updatedOrder = await Order.findByIdAndUpdate(
+          orderId, 
+          { 
+            paymentStatus: 'paid', 
+            status: 'confirmed',
+            paymentReference: reference,
+            updatedAt: new Date()
+          },
+          { new: true }
+        );
+        console.log(`Order ${orderId} marked as paid via webhook, reference: ${reference}`);
+      }
+    }		// Respond quickly to webhook
 		return res.status(200).send('ok');
 	} catch (err) {
 		console.error('webhookHandler error:', err?.message || err);

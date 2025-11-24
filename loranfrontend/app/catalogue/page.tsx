@@ -4,18 +4,22 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 import { CatalogueItem } from "@/app/types";
+import { catalogueAPI } from '@/lib/api';
 
 export default function CataloguePage() {
   const [items, setItems] = useState<CatalogueItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/catalogue`)
+    catalogueAPI.getAll()
       .then(res => setItems(res.data))
-      .catch(() => alert('Failed to load catalogue'))
+      .catch((err) => {
+        console.error('Failed to load catalogue:', err);
+        setError('Failed to load catalogue. Please ensure the backend is running.');
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -47,6 +51,21 @@ export default function CataloguePage() {
   const displayItems = [...featured, ...filtered];
 
   if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div></div>;
+
+  if (error) return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-12 px-4 flex items-center justify-center">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md text-center">
+        <h2 className="text-xl font-bold text-red-700 mb-2">Error Loading Catalogue</h2>
+        <p className="text-red-600 mb-4">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+        >
+          Retry
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-12 px-4">
@@ -98,7 +117,15 @@ export default function CataloguePage() {
               variants={{ hidden: { opacity: 0, scale: 0.8, y: 20 }, show: { opacity: 1, scale: 1, y: 0 } }}
               whileHover={{ scale: 1.08, y: -8 }}
               whileTap={{ scale: 0.95 }}
-              className="relative rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow bg-white group"
+              className="relative rounded-lg overflow-hidde              # Add your GitHub remote (replace with your repo URL)
+              git remote add origin https://github.com/YOUR_USERNAME/loran.git
+              
+              # Verify the remote is set
+              git remote -v
+              
+              # Push to GitHub
+              git branch -M main
+              git push -u origin mainn shadow-md hover:shadow-xl transition-shadow bg-white group"
             >
               {item.featured && (
                 <motion.div 

@@ -10,6 +10,7 @@ interface User {
   roles: string[];
   activeRole: string;
   designerStatus?: string;
+  profilePicture?: string;
 }
 
 interface AuthContextType {

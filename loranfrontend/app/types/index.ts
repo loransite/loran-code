@@ -66,6 +66,8 @@ export interface User {
   fullName: string;
   email: string;
   role: 'client' | 'designer' | 'admin';
+  profilePicture?: string;
+  designerStatus?: 'pending' | 'approved' | 'rejected';
 }
 
 // Order type

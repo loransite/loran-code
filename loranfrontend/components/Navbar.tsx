@@ -169,8 +169,12 @@ export default function Navbar() {
               <>
                 {/* Unified Role Switcher */}
                 <div className="relative" ref={menuRef}>
-                    <div className="relative group">
-                      <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/50 group-hover:border-yellow-400 transition-colors cursor-pointer">
+                  <button 
+                    onClick={() => setRoleMenuOpen(prev => !prev)} 
+                    className="flex items-center gap-2 text-white font-medium group"
+                  >
+                    <div className="relative">
+                      <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/50 group-hover:border-yellow-400 transition-colors">
                         {user?.profilePicture ? (
                           <img 
                             src={user.profilePicture.startsWith('http') ? user.profilePicture : `${process.env.NEXT_PUBLIC_BACKEND_URL}${user.profilePicture.startsWith('/') ? '' : '/'}${user.profilePicture}`} 

@@ -56,27 +56,13 @@ export const processImage = async (req, res) => {
 
     console.log(`[AI Controller] Processing images for user ${req.user.id}. Height: ${options.height}, BMI: ${options.bmi}`);
 
-    const result = await detectMeasurements(
-      file.path, 
-      options, 
-      sidePhoto ? sidePhoto.path : null
-    );
-
-    res.json(result);
-  } catch (err) {
-    console.error("[AI Controller] Error processing images:", err.message);
-    res.status(500).json({ message: "AI processing failed", error: err.message });
-  }
-};
-
     // Try calling the external Swagger measurement API
     try {
-      console.log(`[AI] Calling external Swagger API for file: ${file.filename}`);
-      console.log(`[AI] Side photo: ${sidePhoto ? sidePhoto.filename : 'not provided'}`);
-      console.log(`[AI] Height: ${options.height || 'not provided'} ${options.unit || ''}`);
-      console.log(`[AI] API URL: ${process.env.MEASURE_API_URL}`);
-      
-      const result = await detectMeasurements(file.path, options, sidePhoto ? sidePhoto.path : null);
+      const result = await detectMeasurements(
+        file.path, 
+        options, 
+        sidePhoto ? sidePhoto.path : null
+      );
       
       // If external API doesn't return processedImageUrl, use uploaded file
       if (!result.processedImageUrl) {
@@ -89,7 +75,7 @@ export const processImage = async (req, res) => {
           if (m.unit === 'cm') {
             return {
               ...m,
-              value: m.value / 2.54, // Convert to inches
+              value: parseFloat((m.value / 2.54).toFixed(2)), // Convert to inches
               unit: 'inches'
             };
           }

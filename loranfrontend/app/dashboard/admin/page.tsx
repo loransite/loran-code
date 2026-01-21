@@ -77,7 +77,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     // Check admin access
     const token = localStorage.getItem('token');
-    const activeRole = localStorage.getItem('activeRole');
+    const activeRole = sessionStorage.getItem('activeRole');
     
     if (!token) {
       router.push('/login');

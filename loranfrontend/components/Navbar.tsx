@@ -209,7 +209,12 @@ export default function Navbar() {
                                   {role === 'admin' ? <Shield size={14} /> : 
                                    role === 'designer' ? <Palette size={14} /> : <User size={14} />}
                                 </div>
-                                <span className="capitalize">{role} Panel</span>
+                                <div className="flex flex-col">
+                                  <span className="capitalize leading-tight font-semibold">{role} Panel</span>
+                                  {role === 'designer' && user?.designerStatus === 'pending' && (
+                                    <span className="text-[10px] text-orange-500 font-bold">Application Pending</span>
+                                  )}
+                                </div>
                               </div>
                               {activeRole === role && <CheckCircle size={14} className="text-blue-500" />}
                             </button>
@@ -315,7 +320,12 @@ export default function Navbar() {
                             : 'bg-white/5 text-white hover:bg-white/20'
                         }`}
                       >
-                        <span className="capitalize">{role} Dashboard</span>
+                        <div className="flex flex-col">
+                          <span className="capitalize">{role} Dashboard</span>
+                          {role === 'designer' && user?.designerStatus === 'pending' && (
+                            <span className="text-[10px] text-yellow-300 opacity-90">Application Pending</span>
+                          )}
+                        </div>
                         {activeRole === role && <CheckCircle size={16} />}
                       </button>
                     ))}

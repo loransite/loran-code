@@ -32,7 +32,7 @@ const DesignerDashboard: React.FC = () => {
     // Check authentication and role
     if (typeof window !== 'undefined') {
       const storedToken = localStorage.getItem('token');
-      const activeRole = localStorage.getItem('activeRole');
+      const activeRole = sessionStorage.getItem('activeRole');
 
       if (!storedToken) {
         router.push('/login');

@@ -117,14 +117,28 @@ export default function UploadForm({ onResult, onPreview }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="relative bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 overflow-hidden">
+      {/* Animated Gradient Background Overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none overflow-hidden">
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, 90, 0],
+            x: [0, 50, 0],
+            y: [0, 30, 0]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-full blur-[120px]"
+        />
+      </div>
+
+      <div className="relative z-10 flex items-center justify-between mb-8">
         <div>
           <h3 className="text-2xl font-black text-gray-900 leading-tight">AI Measurement Studio</h3>
           <p className="text-gray-500 text-sm">Upload photos for precise body measurement</p>
         </div>
-        <div className="bg-indigo-50 p-3 rounded-2xl">
-          <Camera className="text-indigo-600" size={24} />
+        <div className="bg-indigo-600 p-3 rounded-2xl text-white shadow-lg shadow-indigo-200">
+          <Camera size={24} />
         </div>
       </div>
 

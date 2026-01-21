@@ -169,11 +169,21 @@ export default function Navbar() {
               <>
                 {/* Unified Role Switcher */}
                 <div className="relative" ref={menuRef}>
-                  <button
-                    onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold text-sm"
-                  >
-                    <UserCircle size={18} />
+                    <div className="relative group">
+                      <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/50 group-hover:border-yellow-400 transition-colors cursor-pointer">
+                        {user?.profilePicture ? (
+                          <img 
+                            src={user.profilePicture.startsWith('http') ? user.profilePicture : `${process.env.NEXT_PUBLIC_BACKEND_URL}${user.profilePicture.startsWith('/') ? '' : '/'}${user.profilePicture}`} 
+                            alt={user.fullName} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                            {user?.fullName?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     <span>My Role: <span className="capitalize text-yellow-300">{activeRole}</span></span>
                     <ChevronDown size={14} className={`transition-transform duration-300 ${roleMenuOpen ? 'rotate-180' : ''}`} />
                   </button>

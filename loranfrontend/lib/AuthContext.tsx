@@ -108,13 +108,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setActiveRole(data.user.activeRole);
       setAvailableRoles(data.availableRoles);
 
-      if (data.user.activeRole === 'designer') {
-        router.push('/dashboard/designer');
-      } else if (data.user.activeRole === 'admin') {
-        router.push('/dashboard/admin');
-      } else {
-        router.push('/dashboard/client');
-      }
+      // Redirect to home page instead of dashboard
+      router.push('/');
     } catch (error) {
       console.error("Failed to save auth state to localStorage", error);
     }

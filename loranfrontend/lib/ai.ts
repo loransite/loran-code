@@ -59,3 +59,33 @@ export async function processImage(
   });
   return res.data as ProcessResult;
 }
+
+export async function processImageWithToken(
+  file: File,
+  token: string,
+  options: Record<string, unknown> = {},
+  onProgress?: (p: number) => void,
+  sidePhoto?: File | null
+): Promise<ProcessResult> {
+  const fd = new FormData();
+  fd.append("file", file);
+  if (sidePhoto) {
+    fd.append("sidePhoto", sidePhoto);
+  }
+  
+  // Height and BMI can be sent as separate fields for easier parsing
+  if (options.height) fd.append("height", String(options.height));
+  if (options.bmi) fd.append("bmi", String(options.bmi));
+  
+  fd.append("options", JSON.stringify(options));
+
+  const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ai/process`, fd, {
+    headers: { 
+      "Content-Type": "multipart/form-data",
+      "Authorization": `Bearer ${token}`
+    },
+    onUploadProgress: (e) => onProgress?.(Math.round((e.loaded * 100) / (e.total || 1))),
+    timeout: 120000,
+  });
+  return res.data as ProcessResult;
+}

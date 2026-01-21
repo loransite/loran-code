@@ -360,33 +360,91 @@ export default function Navbar() {
       </motion.nav>
 
       {/* AI Modal */}
-      {aiOpen && (
-        <div className="fixed inset-0 z-60 flex items-start justify-center p-6">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setAiOpen(false)} />
-          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-auto z-70 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center"><Icon name="ai" /> AI Measurement Studio</h2>
-              <button onClick={() => setAiOpen(false)} className="text-gray-600 hover:text-gray-900">Close</button>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1 space-y-6">
-                {/* @ts-ignore dynamic imports */
-                UploadForm && <UploadForm onResult={handleResult} onPreview={(u: string) => setImageSrc(u)} />}
-                {/* @ts-ignore */}
-                {HistoryList && <HistoryList onLoad={handleLoadHistory} />}
+      <AnimatePresence>
+        {aiOpen && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-10">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm" 
+              onClick={() => setAiOpen(false)} 
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-gray-50 rounded-[32px] shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden z-[120] flex flex-col border border-white/20"
+            >
+              <div className="p-6 border-b border-gray-100 bg-white flex items-center justify-between sticky top-0 z-10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-600 rounded-xl text-white">
+                    <Icon name="ai" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-gray-900 leading-tight">AI Measurement Studio</h2>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Powered by Precision Vision API</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setAiOpen(false)} 
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-900"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l18 18" />
+                  </svg>
+                </button>
               </div>
 
-              <div className="lg:col-span-2 space-y-6">
-                {/* @ts-ignore */}
-                {Preview && <Preview src={imageSrc} measurements={result?.measurements || []} onUpdate={handleUpdateBBox} />}
-                {/* @ts-ignore */}
-                {ResultsPanel && <ResultsPanel measurements={result?.measurements || []} metadata={result?.metadata} />}
+              <div className="overflow-y-auto flex-1 p-6 md:p-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  <div className="lg:col-span-4 space-y-6">
+                    {/* @ts-ignore dynamic imports */
+                    UploadForm && <UploadForm onResult={handleResult} onPreview={(u: string) => setImageSrc(u)} />}
+                    {/* @ts-ignore */}
+                    {HistoryList && <HistoryList onLoad={handleLoadHistory} />}
+                  </div>
+
+                  <div className="lg:col-span-8 space-y-6">
+                    <AnimatePresence mode="wait">
+                      {imageSrc ? (
+                        <motion.div
+                          key="preview"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="space-y-6"
+                        >
+                          {/* @ts-ignore */}
+                          {Preview && <Preview src={imageSrc} measurements={result?.measurements || []} onUpdate={handleUpdateBBox} />}
+                          {/* @ts-ignore */}
+                          {ResultsPanel && <ResultsPanel measurements={result?.measurements || []} metadata={result?.metadata} />}
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="placeholder"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="h-full min-h-[500px] bg-white rounded-[32px] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-center p-12"
+                        >
+                          <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
+                            <Icon name="ai" />
+                          </div>
+                          <h3 className="text-2xl font-black text-gray-900 mb-2">Ready to scan?</h3>
+                          <p className="text-gray-400 max-w-sm font-medium">
+                            Upload your front and side photos to generate your virtual 3D body profile and precise measurements.
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 }

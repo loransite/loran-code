@@ -35,18 +35,39 @@ export const generateDesign = async (req, res) => {
 
 export const processImage = async (req, res) => {
   try {
-    // Handle both single file (req.file) and multiple files (req.files)
-    const file = req.file || (req.files && req.files.file ? req.files.file[0] : null);
+    // Files are provided by uploadAiFields middleware
+    const file = req.files && req.files.file ? req.files.file[0] : null;
     const sidePhoto = req.files && req.files.sidePhoto ? req.files.sidePhoto[0] : null;
     
     if (!file) return res.status(400).json({ message: "Front image file is required" });
 
     let options = {};
-    try {
-      if (req.body.options) options = JSON.parse(req.body.options);
-    } catch (e) {
-      // ignore parse errors
+    if (req.body.options) {
+      try {
+        options = typeof req.body.options === 'string' ? JSON.parse(req.body.options) : req.body.options;
+      } catch (e) {
+        console.warn("[AI Controller] Failed to parse options", e);
+      }
     }
+
+    // Merge in height/bmi if they are directly in body
+    if (req.body.height) options.height = parseFloat(req.body.height);
+    if (req.body.bmi) options.bmi = parseFloat(req.body.bmi);
+
+    console.log(`[AI Controller] Processing images for user ${req.user.id}. Height: ${options.height}, BMI: ${options.bmi}`);
+
+    const result = await detectMeasurements(
+      file.path, 
+      options, 
+      sidePhoto ? sidePhoto.path : null
+    );
+
+    res.json(result);
+  } catch (err) {
+    console.error("[AI Controller] Error processing images:", err.message);
+    res.status(500).json({ message: "AI processing failed", error: err.message });
+  }
+};
 
     // Try calling the external Swagger measurement API
     try {

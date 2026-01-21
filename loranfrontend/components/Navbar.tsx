@@ -143,12 +143,14 @@ export default function Navbar() {
               <Icon name="ai" />AI Try-On
             </button>
 
-            <Link href="/order" className="flex items-center hover:text-gray-200 transition">
-              <svg className="w-4 h-4 inline-block mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              Orders
-            </Link>
+            {isLoggedIn && (
+              <Link href="/order" className="flex items-center hover:text-gray-200 transition">
+                <svg className="w-4 h-4 inline-block mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                Orders
+              </Link>
+            )}
 
             {activeRole === 'client' && (
               <>

@@ -50,7 +50,7 @@ export default function Navbar() {
   const [result, setResult] = useState<any>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   
-  const { isLoggedIn, activeRole, logout, token, availableRoles, switchRole, user: authUser } = useAuth();
+  const { isLoggedIn, activeRole, logout, token, availableRoles, switchRole, user } = useAuth();
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 

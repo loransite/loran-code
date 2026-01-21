@@ -29,12 +29,6 @@ export default function DashboardLayout({ children, user }: Props) {
             <p className="text-lg">
               Welcome, <span className="font-semibold">{user.fullName}</span>
             </p>
-            <button
-              onClick={handleLogout}
-              className="bg-white/20 hover:bg-white/30 px-5 py-2 rounded-full backdrop-blur-sm transition-all"
-            >
-              Logout
-            </button>
           </div>
         </div>
       </header>

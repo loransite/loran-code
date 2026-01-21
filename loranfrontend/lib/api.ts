@@ -27,9 +27,17 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Token expired or invalid - clear storage and redirect
+      const message = error.response?.data?.message || 'Session expired';
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userRole');
+      
+      // Show notification before redirect
+      if (typeof window !== 'undefined') {
+        alert(`${message}. Please log in again.`);
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -62,8 +70,12 @@ export const orderAPI = {
     const query = catalogueId ? `?catalogueId=${catalogueId}` : '';
     return apiClient.get(`/api/orders/client${query}`);
   },
-  create: (data: { catalogueId: string; total: number }) =>
+  create: (data: { catalogueId: string; total: number; measurements?: any; measurementMethod?: string; shipping?: any }) =>
     apiClient.post('/api/orders', data),
+  delete: (orderId: string) => apiClient.delete(`/api/orders/${orderId}`),
+  getAdminOrders: () => apiClient.get('/api/orders'),
+  getDesignerOrders: () => apiClient.get('/api/orders/designer'),
+  updateStatus: (orderId: string, status: string) => apiClient.put(`/api/orders/${orderId}/status`, { status }),
 };
 
 export const paymentAPI = {

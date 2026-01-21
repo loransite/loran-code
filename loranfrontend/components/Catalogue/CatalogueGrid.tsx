@@ -43,7 +43,9 @@ export default function CatalogueGrid({ items }: Props) {
             {/* Image */}
             <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100">
               <Image
-                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${item.imageUrl}`}
+                src={item.imageUrl?.startsWith('/images/') 
+                  ? item.imageUrl 
+                  : `${process.env.NEXT_PUBLIC_BACKEND_URL}${item.imageUrl}`}
                 alt={item.title}
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-110"

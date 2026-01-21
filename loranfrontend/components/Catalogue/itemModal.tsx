@@ -17,6 +17,9 @@ interface Props {
 export default function ItemModal({ item, onClose }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [measurements, setMeasurements] = useState<any>(null);
+  const [measurementMethod, setMeasurementMethod] = useState<string | null>(null);
+  const [shipping, setShipping] = useState<any>(null);
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
@@ -35,7 +38,14 @@ export default function ItemModal({ item, onClose }: Props) {
         <div className="grid md:grid-cols-2">
           {/* Image */}
           <div className="relative h-96 md:h-full">
-            <Image src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${item.imageUrl}`} alt={item.title} fill className="object-cover" />
+            <Image 
+              src={item.imageUrl?.startsWith('/images/') 
+                ? item.imageUrl 
+                : `${process.env.NEXT_PUBLIC_BACKEND_URL}${item.imageUrl}`}
+              alt={item.title} 
+              fill 
+              className="object-cover" 
+            />
           </div>
 
           {/* Details */}
@@ -59,49 +69,71 @@ export default function ItemModal({ item, onClose }: Props) {
 
             <div className="mt-8 flex gap-3">
               <button
-                onClick={async () => {
-                  // Ensure logged in
+                onClick={() => {
+                  // Ensure logged in as client
                   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-                  if (!token) return router.push('/login');
-
-                  // Create order then initialize payment
-                  try {
-                    setLoading(true);
-                    const createResp = await orderAPI.create({ catalogueId: item._id, total: item.price });
-                    const order = createResp.data?.order || createResp.data;
-                    const orderId = order?._id || order?.id;
-
-                    if (!orderId) throw new Error('Order ID not returned');
-
-                    const storedUser = localStorage.getItem('user');
-                    const email = storedUser ? JSON.parse(storedUser).email : null;
-                    if (!email) {
-                      // If we don't have email, redirect user to profile/login to add email
-                      alert('Please ensure you are logged in with an email address before checkout.');
-                      setLoading(false);
-                      return router.push('/login');
+                  let role: string | null = null;
+                  if (typeof window !== 'undefined') {
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                      try { role = JSON.parse(userStr)?.role ?? null; } catch (err) { role = null; }
                     }
-
-                    const initResp = await paymentAPI.initialize({ email, amount: item.price, orderId });
-                    const authorization_url = initResp.data?.authorization_url;
-                    if (!authorization_url) throw new Error('No authorization_url returned');
-
-                    // Redirect to Paystack checkout
-                    window.location.href = authorization_url;
-                  } catch (err: any) {
-                    console.error('Buy now error', err);
-                    alert(err?.message || 'Failed to start checkout');
-                    setLoading(false);
+                    if (!role) role = localStorage.getItem('role');
                   }
+
+                  if (!token || !role) {
+                    const ok = window.confirm('You must login or signup as a client to place an order.\n\nOK = Login, Cancel = Signup');
+                    if (ok) return router.push('/login');
+                    return router.push('/signup');
+                  }
+
+                  if (role !== 'client') {
+                    const ok = window.confirm('You must be a client to place orders. Would you like to register as a client now?\n\nOK = Signup');
+                    if (ok) return router.push('/signup');
+                    return;
+                  }
+
+                  // Redirect to new order flow with design details
+                  const params = new URLSearchParams({
+                    designId: item._id,
+                    designName: item.name,
+                    designImage: item.imageUrl || '',
+                    price: item.price.toString(),
+                  });
+                  router.push(`/order/new?${params.toString()}`);
                 }}
-                className="flex-1 bg-gradient-to-r from-pink-500 to-indigo-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-60"
-                disabled={loading}
+                className="flex-1 bg-gradient-to-r from-pink-500 to-indigo-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-shadow"
               >
-                {loading ? 'Processing…' : 'Buy Now'}
+                Order Now
               </button>
 
-              <button className="flex-1 border border-indigo-600 text-indigo-600 py-3 rounded-lg font-medium hover:bg-indigo-50 transition-colors">
-                AI Try-On
+              <button
+                onClick={async () => {
+                  // Simple manual measurements prompt for now (stub for AI integration)
+                  try {
+                    const h = window.prompt('Height (cm)', measurements?.height || '');
+                    const chest = window.prompt('Chest (cm)', measurements?.chest || '');
+                    const waist = window.prompt('Waist (cm)', measurements?.waist || '');
+                    const hips = window.prompt('Hips (cm)', measurements?.hips || '');
+                    const name = window.prompt('Shipping name', shipping?.name || '');
+                    const city = window.prompt('Shipping city', shipping?.city || '');
+                    const m = {} as any;
+                    if (h) m.height = Number(h);
+                    if (chest) m.chest = Number(chest);
+                    if (waist) m.waist = Number(waist);
+                    if (hips) m.hips = Number(hips);
+                    setMeasurements(Object.keys(m).length ? m : null);
+                    setMeasurementMethod('manual');
+                    setShipping(name || city ? { name, city } : null);
+                    alert('Measurements saved locally — proceed to Buy Now to include them with the order.');
+                  } catch (err) {
+                    console.error('Measurement capture error', err);
+                    alert('Failed to capture measurements');
+                  }
+                }}
+                className="flex-1 border border-indigo-600 text-indigo-600 py-3 rounded-lg font-medium hover:bg-indigo-50 transition-colors"
+              >
+                AI Try-On (manual stub)
               </button>
             </div>
           </div>

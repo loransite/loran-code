@@ -6,6 +6,20 @@ export interface Designer {
   name: string;
 }
 
+// Review type
+export interface Review {
+  _id: string;
+  orderId: string;
+  clientId: {
+    _id: string;
+    fullName: string;
+    profilePicture?: string;
+  };
+  rating: number;
+  comment: string;
+  reviewedAt: string;
+}
+
 // Designer profile (for profile pages)
 export interface DesignerProfile {
   id: string;
@@ -14,6 +28,9 @@ export interface DesignerProfile {
   avatarUrl?: string;
   totalDesigns: number;
   joinedAt: string; // ISO string from DB
+  rating?: number;
+  totalReviews?: number;
+  reviews?: Review[];
 }
 
 // Catalogue item (from /api/catalogue)
@@ -56,7 +73,7 @@ export interface Order {
   _id: string;
   userId: string;
   catalogueId: string;
-  status: 'pending' | 'processing' | 'completed' | 'cancelled' | 'confirmed';
+  status: 'pending' | 'awaiting-payment' | 'awaiting-contact' | 'processing' | 'completed' | 'cancelled' | 'confirmed';
   paymentStatus: 'pending' | 'paid' | 'failed';
   total: number;
   designerId?: string;
@@ -65,10 +82,32 @@ export interface Order {
     chest?: number;
     waist?: number;
     hips?: number;
+    shoulder?: number;
     sleeveLength?: number;
+    inseam?: number;
     notes?: string;
   };
   measurementMethod?: 'ai' | 'manual';
+  aiMeasurementData?: {
+    frontPhotoUrl?: string;
+    sidePhotoUrl?: string;
+    processedAt?: string;
+    confidence?: number;
+    apiSource?: string;
+  };
+  customizationRequest?: string;
+  clientNotes?: string;
+  designerNotes?: string;
+  contactedAt?: string;
+  contactMethod?: string;
+  review?: {
+    rating: number;
+    comment: string;
+    reviewedAt: string;
+    isReviewed: boolean;
+  };
+  adminReviewedAt?: string;
+  assignedToDesignerAt?: string;
   shipping?: {
     name?: string;
     phone?: string;

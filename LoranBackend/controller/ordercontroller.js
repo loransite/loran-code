@@ -1,5 +1,6 @@
 import Order from "../model/order.js";
 import Catalogue from "../model/catalogue.js";
+import { sendEmail } from "../services/emailService.js";
 
 // Client: create an order for a catalogue item
 export const createOrder = async (req, res) => {
@@ -73,13 +74,79 @@ export const getDesignerOrders = async (req, res) => {
 export const updateOrderStatus = async (req, res) => {
   try {
     const orderId = req.params.id;
-    const { status } = req.body;
+    const { status, designerNotes } = req.body;
     if (!status) return res.status(400).json({ message: "Status is required" });
-    const order = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
+    
+    const updateData = { status };
+    if (designerNotes) updateData.designerNotes = designerNotes;
+    
+    const order = await Order.findByIdAndUpdate(orderId, updateData, { new: true })
+      .populate('userId', 'fullName email')
+      .populate('catalogueId', 'title')
+      .populate('designerId', 'fullName email');
+      
     if (!order) return res.status(404).json({ message: "Order not found" });
+    
+    // Send status update notification to client
+    if (order.userId?.email) {
+      await sendEmail({
+        to: order.userId.email,
+        template: 'orderStatusUpdate',
+        data: {
+          customerName: order.userId.fullName,
+          orderId: order._id,
+          status: order.status,
+          designerNotes: order.designerNotes,
+          message: getStatusMessage(order.status),
+        },
+      }).catch(err => console.error('Email notification error:', err));
+    }
+    
     res.json({ message: "Order updated", order });
   } catch (err) {
     console.error("Update order status error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Helper function for status messages
+function getStatusMessage(status) {
+  const messages = {
+    'awaiting-payment': 'Please complete your payment to proceed.',
+    'awaiting-contact': 'Our team will contact you soon to discuss your requirements.',
+    'processing': 'Your design is being created! The designer is working on your order.',
+    'completed': 'Your order is ready! Please check your email for pickup/delivery details.',
+    'cancelled': 'Your order has been cancelled. If you have any questions, please contact us.',
+    'confirmed': 'Your order is confirmed and will be processed soon.',
+  };
+  return messages[status] || 'Your order status has been updated.';
+}
+
+// Admin: get all orders
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({}).populate('catalogueId', 'title description price').populate('userId', 'fullName email');
+    res.json(orders);
+  } catch (err) {
+    console.error('Error fetching all orders:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Client: delete their pending order (remove from cart)
+export const deleteOrder = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const userId = req.user.id;
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (order.userId.toString() !== userId) return res.status(403).json({ message: 'Not authorized' });
+    if (order.paymentStatus === 'paid') return res.status(400).json({ message: 'Cannot remove a paid order' });
+
+    await Order.findByIdAndDelete(orderId);
+    res.json({ message: 'Order removed' });
+  } catch (err) {
+    console.error('Delete order error:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 };

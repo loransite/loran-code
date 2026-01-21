@@ -15,6 +15,9 @@ import aiRoutes from "./routes/airoutes.js";
 import paymentRoutes from "./routes/paymentroutes.js";
 import adminRoutes from "./routes/adminroutes.js";
 import designersRoutes from "./routes/designers.js";
+import measurementRoutes from "./routes/measurementroutes.js";
+import reviewRoutes from "./routes/reviewroutes.js";
+import userRoutes from "./routes/userroutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -55,9 +58,15 @@ app.use("/api/catalogue", catalogueRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/designers", designersRoutes);
+app.use("/api/measurements", measurementRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/users", userRoutes);
 
-// AI Route with file upload
-app.use("/api/ai", upload.single("file"), aiRoutes);
+// AI Route with file upload (accepts front photo + optional side photo)
+app.use("/api/ai", upload.fields([
+  { name: "file", maxCount: 1 },        // Front photo
+  { name: "sidePhoto", maxCount: 1 }    // Side photo (optional)
+]), aiRoutes);
 
 // Root route
 app.get("/", (req, res) => {
@@ -79,12 +88,13 @@ const startServer = async () => {
     });
 
     server.on('error', (err) => {
-      console.error("❌ Server bind error:", err.message);
-      process.exit(1);
-    });
-
-    server.on('listening', () => {
-      console.log("✅ Server is listening");
+      if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use. Please free the port and try again.`);
+        process.exit(1);
+      } else {
+        console.error("❌ Server error:", err.message);
+        process.exit(1);
+      }
     });
   } catch (error) {
     console.error("❌ Failed to start server:", error.message);

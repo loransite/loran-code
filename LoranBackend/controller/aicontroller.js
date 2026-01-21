@@ -1,10 +1,8 @@
-import { generateAIResponse } from "../services/aiService.js"; // For generateDesign
+import { generateAIResponse, detectMeasurements } from "../services/aiService.js";
 
 export const uploadPhoto = async (req, res) => {
   try {
-    // file is at req.file.path or /uploads/filename
     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
-    // Mocked measurement data
     const measurements = {
       chest: 36,
       waist: 28,
@@ -27,11 +25,93 @@ export const generateDesign = async (req, res) => {
       return res.status(400).json({ message: "Prompt is required" });
     }
 
-    // Placeholder: Call an AI service to generate a design
-    const design = await generateAIResponse(prompt); // Replace with actual AI service call
+    const design = await generateAIResponse(prompt);
     res.json({ message: "Design generated successfully", design });
   } catch (error) {
     console.error("Error generating design:", error.message, error.stack);
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const processImage = async (req, res) => {
+  try {
+    // Handle both single file (req.file) and multiple files (req.files)
+    const file = req.file || (req.files && req.files.file ? req.files.file[0] : null);
+    const sidePhoto = req.files && req.files.sidePhoto ? req.files.sidePhoto[0] : null;
+    
+    if (!file) return res.status(400).json({ message: "Front image file is required" });
+
+    let options = {};
+    try {
+      if (req.body.options) options = JSON.parse(req.body.options);
+    } catch (e) {
+      // ignore parse errors
+    }
+
+    // Try calling the external Swagger measurement API
+    try {
+      console.log(`[AI] Calling external Swagger API for file: ${file.filename}`);
+      console.log(`[AI] Side photo: ${sidePhoto ? sidePhoto.filename : 'not provided'}`);
+      console.log(`[AI] Height: ${options.height || 'not provided'} ${options.unit || ''}`);
+      console.log(`[AI] API URL: ${process.env.MEASURE_API_URL}`);
+      
+      const result = await detectMeasurements(file.path, options, sidePhoto ? sidePhoto.path : null);
+      
+      // If external API doesn't return processedImageUrl, use uploaded file
+      if (!result.processedImageUrl) {
+        result.processedImageUrl = `/uploads/${file.filename}`;
+      }
+      
+      // Convert all measurements to inches if they're in cm
+      if (result.measurements) {
+        result.measurements = result.measurements.map(m => {
+          if (m.unit === 'cm') {
+            return {
+              ...m,
+              value: m.value / 2.54, // Convert to inches
+              unit: 'inches'
+            };
+          }
+          return m;
+        });
+      }
+      
+      console.log(`[AI] ✅ External Swagger API SUCCESS: ${result.measurements?.length || 0} measurements`);
+      result.metadata = {
+        ...result.metadata,
+        apiSource: 'swagger',
+        apiStatus: 'connected'
+      };
+      
+      return res.json(result);
+    } catch (apiError) {
+      console.warn(`[AI] ❌ External Swagger API FAILED: ${apiError.message}`);
+      console.warn(`[AI] Using fallback mock data`);
+      
+      // Fallback to mock measurements IN INCHES
+      const imageUrl = `/uploads/${file.filename}`;
+      const measurements = [
+        { label: "Chest", value: 38.0, unit: "inches", bbox: { x: 80, y: 40, w: 160, h: 120 } },
+        { label: "Waist", value: 31.0, unit: "inches", bbox: { x: 90, y: 180, w: 140, h: 80 } },
+        { label: "Hips", value: 40.3, unit: "inches", bbox: { x: 85, y: 270, w: 150, h: 100 } },
+        { label: "Shoulder", value: 16.6, unit: "inches", bbox: { x: 60, y: 20, w: 200, h: 60 } },
+      ];
+
+      return res.json({
+        measurements,
+        processedImageUrl: imageUrl,
+        metadata: { 
+          confidence: 0.91, 
+          modelVersion: "dev-mock", 
+          fallback: true,
+          apiSource: 'mock',
+          apiStatus: 'fallback',
+          error: apiError.message 
+        }
+      });
+    }
+  } catch (err) {
+    console.error("[AI] processImage error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
   }
 };

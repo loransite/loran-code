@@ -24,7 +24,8 @@ export const createItem = async (req, res) => {
 
 export const getCatalogue = async (req, res) => {
   try {
-    const items = await Catalogue.find();
+    // Only show approved items to the public
+    const items = await Catalogue.find({ status: 'approved' });
     
     // Ensure all items have designer as object
     const normalized = items.map(item => {

@@ -45,7 +45,7 @@ router.post("/designer", protect, upload.single("file"), async (req, res) => {
       title,
       description,
       price: Number(price) || 0,
-      imageUrl,
+      image: imageUrl,
       designer: { id: req.user.id, name: user?.fullName || "Unknown" },
     });
     await catalogueItem.save();
@@ -82,7 +82,7 @@ router.post("/", protect, upload.single("file"), async (req, res) => {
       title,
       description,
       price: Number(price) || 0,
-      imageUrl,
+      image: imageUrl,
       designer: { id: req.user.id, name: user?.fullName || "Unknown" },
     });
     await catalogueItem.save();

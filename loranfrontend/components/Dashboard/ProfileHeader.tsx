@@ -140,7 +140,7 @@ export default function ProfileHeader({ role }: ProfileHeaderProps) {
                 <span className="font-semibold text-gray-800">
                   {user.rating ? user.rating.toFixed(1) : "No ratings yet"}
                 </span>
-                {user.totalReviews > 0 && (
+                {user.totalReviews && user.totalReviews > 0 && (
                   <span className="text-xs text-gray-600 ml-1">
                     ({user.totalReviews} review{user.totalReviews !== 1 ? "s" : ""})
                   </span>

@@ -4,37 +4,22 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Camera, User, Star } from "lucide-react";
 import axios from "axios";
+import { useAuth } from "@/lib/AuthContext";
 
 interface ProfileHeaderProps {
   role: "client" | "designer";
 }
 
 export default function ProfileHeader({ role }: ProfileHeaderProps) {
-  const [user, setUser] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const { user, updateUser } = useAuth();
 
   useEffect(() => {
-    fetchUserProfile();
-  }, []);
-
-  const fetchUserProfile = async () => {
-    try {
-      const token = sessionStorage.getItem("token");
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/profile`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setUser(res.data);
-      if (res.data.profilePicture) {
-        setPreviewUrl(`${process.env.NEXT_PUBLIC_BACKEND_URL}/${res.data.profilePicture}`);
-      }
-    } catch (error) {
-      console.error("Failed to fetch profile:", error);
+    if (user?.profilePicture) {
+      setPreviewUrl(`${process.env.NEXT_PUBLIC_BACKEND_URL}/${user.profilePicture}`);
     }
-  };
+  }, [user]);
 
   const handlePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,10 +50,8 @@ export default function ProfileHeader({ role }: ProfileHeaderProps) {
         }
       );
       
-      // Update local storage
-      const updatedUser = { ...user, ...res.data };
-      setUser(updatedUser);
-      sessionStorage.setItem("user", JSON.stringify(updatedUser));
+      // Update AuthContext with new profile data
+      updateUser(res.data);
       
       alert("✅ Profile picture updated successfully!");
     } catch (error: any) {

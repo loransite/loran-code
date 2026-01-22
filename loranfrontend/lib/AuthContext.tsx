@@ -23,6 +23,7 @@ interface AuthContextType {
   login: (data: { user: User; token: string; availableRoles: string[] }) => void;
   logout: () => void;
   switchRole: (role: string) => void;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -175,6 +176,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      sessionStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
   const value = {
     user,
     token,
@@ -184,6 +193,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     logout,
     switchRole,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

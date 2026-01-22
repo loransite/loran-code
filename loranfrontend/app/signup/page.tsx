@@ -88,10 +88,10 @@ export default function SignupPage() {
         return;
       }
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.setItem("activeRole", res.data.user.activeRole);
-      localStorage.setItem("availableRoles", JSON.stringify(res.data.availableRoles || []));
+      sessionStorage.setItem("token", res.data.token);
+      sessionStorage.setItem("user", JSON.stringify(res.data.user));
+      sessionStorage.setItem("activeRole", res.data.user.activeRole);
+      sessionStorage.setItem("availableRoles", JSON.stringify(res.data.availableRoles || []));
 
       // Show success message
       alert(`✅ Account created successfully! Welcome, ${res.data.user.fullName}!`);

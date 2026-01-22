@@ -40,7 +40,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
       return;
     }
 
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (!token) {
       alert('You must be logged in to upload');
       return;

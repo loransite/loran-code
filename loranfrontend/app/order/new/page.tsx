@@ -65,7 +65,7 @@ export default function NewOrderPage() {
 
     // Submit order to backend
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders`, {
         method: "POST",
         headers: {

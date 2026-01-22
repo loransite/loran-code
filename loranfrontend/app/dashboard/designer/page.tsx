@@ -31,7 +31,7 @@ const DesignerDashboard: React.FC = () => {
   useEffect(() => {
     // Check authentication and role
     if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem('token');
+      const storedToken = sessionStorage.getItem('token');
       const activeRole = sessionStorage.getItem('activeRole');
 
       if (!storedToken) {

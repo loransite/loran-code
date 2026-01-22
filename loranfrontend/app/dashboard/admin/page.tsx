@@ -76,7 +76,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Check admin access
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const activeRole = sessionStorage.getItem('activeRole');
     
     if (!token) {
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     setLoading(true);
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     
     try {
       // Fetch orders
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
   };
 
   const handleApproveDesigner = async (userId: string, action: 'approve' | 'reject') => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/approve-designer`, {
         method: 'POST',
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
   };
 
   const handleApproveItem = async (itemId: string, action: 'approve' | 'reject') => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/approve-item`, {
         method: 'POST',

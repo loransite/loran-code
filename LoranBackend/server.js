@@ -87,24 +87,39 @@ const globalLimiter = rateLimit({
   message: { message: 'Too many requests from this IP, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({ message: 'Too many requests from this IP, please try again later.' });
+  }
 });
 
 // 4. Rate Limiting - Auth Routes (Stricter)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Only 5 attempts per 15 minutes
-  message: { message: 'Too many authentication attempts, please try again later.' },
   skipSuccessfulRequests: true, // Don't count successful logins
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({ message: 'Too many authentication attempts, please try again later.' });
+  }
 });
 
 // 5. Rate Limiting - AI Routes (Very Strict)
 const aiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10, // Only 10 AI requests per hour
-  message: { message: 'AI processing limit reached. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({ message: 'AI processing limit reached. Please try again later.' });
+  }
 });
 
-// 6. Prevent NoSQL Injection
+// 6. Body Parser with size limits (MUST come before rate limiters)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 7. Prevent NoSQL Injection
 app.use(mongoSanitize({
   replaceWith: '_',
   onSanitize: ({ req, key }) => {
@@ -112,21 +127,11 @@ app.use(mongoSanitize({
   }
 }));
 
-// 7. Body Parser with size limits
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
 // 8. Static files
 app.use("/uploads", express.static("uploads"));
 
-// ===== APPLY RATE LIMITERS =====
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/signup', authLimiter);
-app.use('/api/auth/forgot-password', authLimiter);
-app.use('/api/ai', aiLimiter);
-app.use('/api', globalLimiter); // Apply to all other API routes
-
 // ===== ROUTES =====
+// Auth routes with rate limiting
 app.use("/api/auth", authRoutes);
 app.use("/api/designs", designRoutes);
 app.use("/api/orders", orderRoutes);

@@ -1,32 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { User, Palette, ChevronDown } from "lucide-react";
+import { useAuth } from "../lib/AuthContext";
 
 export default function RoleSwitcher() {
-  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const { availableRoles } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          const roles = user.roles || [user.role];
-          setUserRoles(roles.filter(Boolean));
-        } catch (e) {
-          setUserRoles([]);
-        }
-      }
-    }
-  }, []);
-
-  if (userRoles.length === 0) {
+  if (!availableRoles || availableRoles.length === 0) {
     return null;
   }
+
+  const userRoles = availableRoles;
 
   // If only one role, show direct link
   if (userRoles.length === 1) {

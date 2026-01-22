@@ -20,7 +20,7 @@ export default function ProfileHeader({ role }: ProfileHeaderProps) {
 
   const fetchUserProfile = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/profile`,
         {
@@ -53,7 +53,7 @@ export default function ProfileHeader({ role }: ProfileHeaderProps) {
     formData.append("profilePicture", file);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const res = await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/profile`,
         formData,
@@ -68,7 +68,7 @@ export default function ProfileHeader({ role }: ProfileHeaderProps) {
       // Update local storage
       const updatedUser = { ...user, ...res.data };
       setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      sessionStorage.setItem("user", JSON.stringify(updatedUser));
       
       alert("✅ Profile picture updated successfully!");
     } catch (error: any) {

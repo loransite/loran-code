@@ -28,7 +28,7 @@ export default function ReviewForm({ orderId, designerName, onSuccess, onClose }
     try {
       setSubmitting(true);
       setError("");
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       
       await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/reviews/${orderId}`,

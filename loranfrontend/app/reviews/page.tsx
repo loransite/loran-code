@@ -34,7 +34,7 @@ export default function ReviewsPage() {
 
   const fetchReviewableOrders = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/reviews/reviewable`,
         { headers: { Authorization: `Bearer ${token}` } }

@@ -26,9 +26,9 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
     if (!token) return router.push('/login');
-    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+    const userStr = typeof window !== 'undefined' ? sessionStorage.getItem('user') : null;
     if (userStr) {
       try {
         setClientInfo(JSON.parse(userStr));
@@ -41,7 +41,7 @@ export default function OrdersPage() {
 
   const completePayment = async (order: Order) => {
     try {
-      const storedUser = localStorage.getItem('user');
+      const storedUser = sessionStorage.getItem('user');
       const email = storedUser ? JSON.parse(storedUser).email : null;
       if (!email) return router.push('/login');
       const initResp = await paymentAPI.initialize({ email, amount: order.total, orderId: order._id });

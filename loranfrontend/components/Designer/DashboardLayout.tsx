@@ -12,8 +12,9 @@ export default function DashboardLayout({ children, user }: Props) {
   const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("availableRoles");
     router.push("/login");
   };
 

@@ -71,14 +71,13 @@ export default function ItemModal({ item, onClose }: Props) {
               <button
                 onClick={() => {
                   // Ensure logged in as client
-                  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+                  const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
                   let role: string | null = null;
                   if (typeof window !== 'undefined') {
-                    const userStr = localStorage.getItem('user');
+                    const userStr = sessionStorage.getItem('user');
                     if (userStr) {
-                      try { role = JSON.parse(userStr)?.role ?? null; } catch (err) { role = null; }
+                      try { role = JSON.parse(userStr)?.activeRole ?? null; } catch (err) { role = null; }
                     }
-                    if (!role) role = localStorage.getItem('role');
                   }
 
                   if (!token || !role) {

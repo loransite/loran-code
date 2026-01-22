@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const updatedUser = { 
               ...data, 
               id: data._id,
-              activeRole: (data.roles && data.roles[0]) || 'client'
+              activeRole: activeRole // Preserve current activeRole
             };
             sessionStorage.setItem('user', JSON.stringify(updatedUser));
             sessionStorage.setItem('availableRoles', JSON.stringify(updatedUser.roles || []));
@@ -73,10 +73,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
         
-        // Default to the first role in their roles list
-        const defaultRole = (parsedUser.roles && parsedUser.roles[0]) || 'client';
+        // Use the activeRole from the stored user data, or fallback to first role
+        const activeRoleFromStorage = parsedUser.activeRole || (parsedUser.roles && parsedUser.roles[0]) || 'client';
         
-        setActiveRole(defaultRole);
+        setActiveRole(activeRoleFromStorage);
+        // Store in sessionStorage for direct access
+        sessionStorage.setItem('activeRole', activeRoleFromStorage);
         setAvailableRoles(storedAvailableRoles ? JSON.parse(storedAvailableRoles) : (parsedUser.roles || []));
         
         // Fetch background update to verify/refresh status (approved/roles etc)
@@ -104,6 +106,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(data.user);
       setActiveRole(data.user.activeRole);
       setAvailableRoles(data.availableRoles);
+
+      // Store activeRole in sessionStorage for direct access
+      sessionStorage.setItem('activeRole', data.user.activeRole);
 
       // Redirect to home page instead of dashboard
       router.push('/');
@@ -144,10 +149,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           sessionStorage.setItem('availableRoles', JSON.stringify(data.user.roles || []));
           
           setToken(data.token);
-          setActiveRole(data.activeRole);
+          setActiveRole(data.user.activeRole);
           setUser({ ...data.user, id: data.user._id || data.user.id });
           setAvailableRoles(data.user.roles || []);
 
+          // Store activeRole in sessionStorage
+          sessionStorage.setItem('activeRole', data.user.activeRole);
+
+          // Navigate to appropriate dashboard
           if (role === 'designer') {
             router.push('/dashboard/designer');
           } else if (role === 'admin') {
@@ -155,7 +164,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           } else {
             router.push('/dashboard/client');
           }
-           window.location.reload();
         } else {
           const err = await res.json();
           alert(err.message || 'Failed to switch role');

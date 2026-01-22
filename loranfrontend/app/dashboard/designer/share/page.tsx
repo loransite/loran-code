@@ -43,8 +43,8 @@ export default function DesignerProfileShare() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userStr = localStorage.getItem("user");
+    const token = sessionStorage.getItem("token");
+    const userStr = sessionStorage.getItem("user");
 
     if (!token || !userStr) {
       router.push("/login");

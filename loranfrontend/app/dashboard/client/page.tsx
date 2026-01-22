@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
-import { Star, Package, MessageSquare } from "lucide-react";
+import { Star, Package, MessageSquare, Ruler, ShoppingBag } from "lucide-react";
 import ProfileHeader from "@/components/Dashboard/ProfileHeader";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -65,9 +65,8 @@ export default function ClientDashboard() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-    const activeRole = localStorage.getItem("activeRole");
+    const token = sessionStorage.getItem("token");
+    const userData = sessionStorage.getItem("user");
 
     if (!token || !userData) {
       router.push("/login");
@@ -75,7 +74,7 @@ export default function ClientDashboard() {
     }
 
     // Check if user is logged in as client
-    if (activeRole !== "client") {
+    if (authUser && authUser.activeRole !== "client") {
       router.push("/login");
       return;
     }
@@ -122,7 +121,7 @@ export default function ClientDashboard() {
         <div className="container mx-auto px-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Loran Tailoring</h1>
           <div className="flex items-center space-x-4">
-            <p>Welcome, {user.fullName} ({user.role})</p>
+            <p>Welcome, {user.fullName}</p>
           </div>
         </div>
       </header>
@@ -130,6 +129,55 @@ export default function ClientDashboard() {
       {/* Profile Header */}
       <div className="container mx-auto px-4 py-6">
         <ProfileHeader role="client" />
+      </div>
+
+      {/* Quick Actions */}
+      <div className="container mx-auto px-4">
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          <Link
+            href="/dashboard/client/measurements"
+            className="flex items-center gap-4 p-6 bg-white rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-200"
+          >
+            <Ruler className="w-8 h-8 text-blue-600" />
+            <div>
+              <h3 className="font-semibold text-gray-900">My Measurements</h3>
+              <p className="text-sm text-gray-600">View & manage</p>
+            </div>
+          </Link>
+          
+          <Link
+            href="/catalogue"
+            className="flex items-center gap-4 p-6 bg-white rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-200"
+          >
+            <ShoppingBag className="w-8 h-8 text-green-600" />
+            <div>
+              <h3 className="font-semibold text-gray-900">Browse Catalogue</h3>
+              <p className="text-sm text-gray-600">Shop designs</p>
+            </div>
+          </Link>
+          
+          <Link
+            href="/order"
+            className="flex items-center gap-4 p-6 bg-white rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-200"
+          >
+            <Package className="w-8 h-8 text-purple-600" />
+            <div>
+              <h3 className="font-semibold text-gray-900">My Orders</h3>
+              <p className="text-sm text-gray-600">Track orders</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/reviews"
+            className="flex items-center gap-4 p-6 bg-white rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-200"
+          >
+            <Star className="w-8 h-8 text-yellow-600" />
+            <div>
+              <h3 className="font-semibold text-gray-900">Reviews</h3>
+              <p className="text-sm text-gray-600">Rate orders</p>
+            </div>
+          </Link>
+        </div>
       </div>
 
       {/* Main Site Content (Catalogue) */}

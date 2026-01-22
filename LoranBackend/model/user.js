@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
 fullName: { type: String, required: true },
-email: { type: String, required: true, unique: true },
+email: { type: String, required: true },
 password: { type: String, required: true },
 	role: { type: String, enum: ['client', 'designer', 'admin'] }, // Added back for legacy support
 	roles: [{ type: String, enum: ['client', 'designer', 'admin'], required: true }], // Changed to array
@@ -93,7 +93,7 @@ password: { type: String, required: true },
 });
 
 // Indexes for better query performance
-userSchema.index({ email: 1 }); // For login queries
+userSchema.index({ email: 1 }, { unique: true }); // For login queries with uniqueness
 userSchema.index({ roles: 1 }); // For role-based queries
 userSchema.index({ designerStatus: 1 }); // For admin approval queries
 userSchema.index({ rating: -1 }); // For sorting designers by rating

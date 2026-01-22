@@ -20,8 +20,8 @@ export default function AIPage() {
   useEffect(() => {
     // Check if user is logged in as a client
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
+      const token = sessionStorage.getItem('token');
+      const userStr = sessionStorage.getItem('user');
       
       if (!token || !userStr) {
         // Not logged in - redirect to login

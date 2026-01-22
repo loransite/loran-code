@@ -1,0 +1,15 @@
+{
+  "testEnvironment": "node",
+  "coveragePathIgnorePatterns": [
+    "/node_modules/"
+  ],
+  "testMatch": [
+    "**/__tests__/**/*.test.js"
+  ],
+  "collectCoverageFrom": [
+    "controller/**/*.js",
+    "middleware/**/*.js",
+    "services/**/*.js",
+    "!**/node_modules/**"
+  ]
+}

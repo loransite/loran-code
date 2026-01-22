@@ -57,4 +57,11 @@ const orderSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
+// Indexes for better query performance
+orderSchema.index({ userId: 1, createdAt: -1 }); // For user's order history
+orderSchema.index({ designerId: 1, status: 1 }); // For designer's orders
+orderSchema.index({ status: 1, createdAt: -1 }); // For admin order management
+orderSchema.index({ paymentStatus: 1 }); // For payment tracking
+orderSchema.index({ 'review.isReviewed': 1 }); // For review queries
+
 export default mongoose.model("Order", orderSchema);

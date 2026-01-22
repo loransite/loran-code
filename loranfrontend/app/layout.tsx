@@ -1,5 +1,6 @@
 import "@/app/globals.css";
 import Navbar from "@/components/Navbar";
+import EmailVerificationBanner from "@/components/EmailVerificationBanner";
 import type { Metadata } from "next";
 
 import { AuthProvider } from '@/lib/AuthContext';
@@ -19,6 +20,7 @@ export default function RootLayout({
       <body className="bg-gray-50 text-gray-900">
         <AuthProvider>
           <Navbar />
+          <EmailVerificationBanner />
           <main className="pt-20">{children}</main>
         </AuthProvider>
       </body>

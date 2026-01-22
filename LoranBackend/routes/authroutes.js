@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { signup, login, forgotPassword, resetPassword, addRole, switchRole } from '../controller/authcontroller.js';
+import { signup, login, forgotPassword, resetPassword, addRole, switchRole, verifyEmail, resendVerification } from '../controller/authcontroller.js';
 import { protect } from '../middleware/authmiddleware.js';
 
 const router = express.Router();
@@ -17,6 +17,10 @@ router.post('/signup', upload.single('profilePicture'), signup);
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
+
+// Email verification
+router.get('/verify-email/:token', verifyEmail);
+router.post('/resend-verification', resendVerification);
 
 // Add a role to existing user (e.g. Client becoming a Designer)
 router.post('/add-role', protect, addRole);

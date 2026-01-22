@@ -11,6 +11,7 @@ interface User {
   activeRole: string;
   designerStatus?: string;
   profilePicture?: string;
+  isEmailVerified?: boolean;
 }
 
 interface AuthContextType {
@@ -36,7 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const fetchLatestProfile = async () => {
-      const storedToken = localStorage.getItem('token');
+      const storedToken = sessionStorage.getItem('token');
       if (storedToken) {
         try {
           const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/profile`, {
@@ -47,10 +48,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const updatedUser = { 
               ...data, 
               id: data._id,
-              activeRole: sessionStorage.getItem('activeRole') || (data.roles && data.roles[0]) || 'client'
+              activeRole: (data.roles && data.roles[0]) || 'client'
             };
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-            localStorage.setItem('availableRoles', JSON.stringify(updatedUser.roles || []));
+            sessionStorage.setItem('user', JSON.stringify(updatedUser));
+            sessionStorage.setItem('availableRoles', JSON.stringify(updatedUser.roles || []));
             setUser(updatedUser);
             setAvailableRoles(updatedUser.roles || []);
           } else if (res.status === 401) {
@@ -63,22 +64,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     try {
-      const storedToken = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-      // Use sessionStorage for activeRole so it goes "back to normal" when the site is closed
-      const storedActiveRole = sessionStorage.getItem('activeRole');
-      const storedAvailableRoles = localStorage.getItem('availableRoles');
+      const storedToken = sessionStorage.getItem('token');
+      const storedUser = sessionStorage.getItem('user');
+      const storedAvailableRoles = sessionStorage.getItem('availableRoles');
 
       if (storedToken && storedUser) {
         setToken(storedToken);
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
         
-        // Default to the first role in their roles list if no active session role
+        // Default to the first role in their roles list
         const defaultRole = (parsedUser.roles && parsedUser.roles[0]) || 'client';
-        const roleToSet = storedActiveRole || defaultRole;
         
-        setActiveRole(roleToSet);
+        setActiveRole(defaultRole);
         setAvailableRoles(storedAvailableRoles ? JSON.parse(storedAvailableRoles) : (parsedUser.roles || []));
         
         // Fetch background update to verify/refresh status (approved/roles etc)
@@ -91,18 +89,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
     } catch (error) {
-      console.error("Failed to initialize auth state from localStorage", error);
+      console.error("Failed to initialize auth state from sessionStorage", error);
       logout();
     }
   }, [pathname]);
 
   const login = (data: { user: User; token: string; availableRoles: string[] }) => {
     try {
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      // Save primary role to session so it resets on close
-      sessionStorage.setItem('activeRole', data.user.activeRole);
-      localStorage.setItem('availableRoles', JSON.stringify(data.availableRoles));
+      sessionStorage.setItem('token', data.token);
+      sessionStorage.setItem('user', JSON.stringify(data.user));
+      sessionStorage.setItem('availableRoles', JSON.stringify(data.availableRoles));
 
       setToken(data.token);
       setUser(data.user);
@@ -112,16 +108,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Redirect to home page instead of dashboard
       router.push('/');
     } catch (error) {
-      console.error("Failed to save auth state to localStorage", error);
+      console.error("Failed to save auth state to sessionStorage", error);
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('availableRoles');
-    sessionStorage.removeItem('activeRole');
-    localStorage.removeItem('activeRole');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('availableRoles');
 
     setUser(null);
     setToken(null);
@@ -145,10 +139,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (res.ok) {
           const data = await res.json();
           // Update both token and state with new active role
-          localStorage.setItem('token', data.token);
-          sessionStorage.setItem('activeRole', data.activeRole);
-          localStorage.setItem('user', JSON.stringify({ ...data.user, id: data.user._id || data.user.id }));
-          localStorage.setItem('availableRoles', JSON.stringify(data.user.roles || []));
+          sessionStorage.setItem('token', data.token);
+          sessionStorage.setItem('user', JSON.stringify({ ...data.user, id: data.user._id || data.user.id }));
+          sessionStorage.setItem('availableRoles', JSON.stringify(data.user.roles || []));
           
           setToken(data.token);
           setActiveRole(data.activeRole);

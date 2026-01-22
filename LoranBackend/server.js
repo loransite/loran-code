@@ -4,6 +4,9 @@ import dotenv from "dotenv";
 import cors from "cors";
 import multer from "multer";
 import path from "path";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import mongoSanitize from "express-mongo-sanitize";
 import connectDB from "./config/db.js";
 
 // Import Routes
@@ -22,6 +25,14 @@ import userRoutes from "./routes/userroutes.js";
 // Load environment variables
 dotenv.config();
 
+// Validate critical environment variables
+const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET', 'PORT'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+if (missingEnvVars.length > 0) {
+  console.error(`❌ Missing required environment variables: ${missingEnvVars.join(', ')}`);
+  process.exit(1);
+}
+
 // Create Express app
 const app = express();
 
@@ -38,19 +49,84 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Middleware
+// ===== SECURITY MIDDLEWARE =====
+
+// 1. Security Headers
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for now, configure later
+  crossOriginEmbedderPolicy: false
+}));
+
+// 2. CORS Configuration
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [process.env.FRONTEND_URL]
+  : ["http://localhost:3000", "http://127.0.0.1:3000"];
+
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.warn(`⚠️ Blocked CORS request from origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   })
 );
 
-app.use(express.json());
+// 3. Rate Limiting - Global
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: { message: 'Too many requests from this IP, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// 4. Rate Limiting - Auth Routes (Stricter)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Only 5 attempts per 15 minutes
+  message: { message: 'Too many authentication attempts, please try again later.' },
+  skipSuccessfulRequests: true, // Don't count successful logins
+});
+
+// 5. Rate Limiting - AI Routes (Very Strict)
+const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // Only 10 AI requests per hour
+  message: { message: 'AI processing limit reached. Please try again later.' },
+});
+
+// 6. Prevent NoSQL Injection
+app.use(mongoSanitize({
+  replaceWith: '_',
+  onSanitize: ({ req, key }) => {
+    console.warn(`⚠️ Sanitized potentially malicious input: ${key}`);
+  }
+}));
+
+// 7. Body Parser with size limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 8. Static files
 app.use("/uploads", express.static("uploads"));
 
-// Routes
+// ===== APPLY RATE LIMITERS =====
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/signup', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
+app.use('/api/ai', aiLimiter);
+app.use('/api', globalLimiter); // Apply to all other API routes
+
+// ===== ROUTES =====
 app.use("/api/auth", authRoutes);
 app.use("/api/designs", designRoutes);
 app.use("/api/orders", orderRoutes);
@@ -68,9 +144,49 @@ app.use("/api/ai", upload.fields([
   { name: "sidePhoto", maxCount: 1 }    // Side photo (optional)
 ]), aiRoutes);
 
+// Health Check Endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({ 
+    status: "healthy", 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Root route
 app.get("/", (req, res) => {
   res.send("Loran Backend is running!");
+});
+
+// ===== GLOBAL ERROR HANDLER =====
+app.use((err, req, res, next) => {
+  // Log error for debugging
+  console.error('❌ Error:', {
+    message: err.message,
+    path: req.path,
+    method: req.method,
+    ip: req.ip,
+    timestamp: new Date().toISOString()
+  });
+
+  // Don't leak error details in production
+  const errorResponse = {
+    message: process.env.NODE_ENV === 'production' 
+      ? 'An error occurred. Please try again later.' 
+      : err.message,
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+  };
+
+  res.status(err.status || 500).json(errorResponse);
+});
+
+// Handle 404 routes
+app.use((req, res) => {
+  res.status(404).json({ 
+    message: 'Route not found',
+    path: req.path 
+  });
 });
 
 // Start server
@@ -78,13 +194,17 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    console.log("Connecting to MongoDB...");
+    console.log("🔄 Connecting to MongoDB...");
     await connectDB();
-    console.log("MongoDB connected successfully");
+    console.log("✅ MongoDB connected successfully");
 
-    console.log(`Attempting to listen on port ${PORT}...`);
+    console.log(`🔄 Attempting to listen on port ${PORT}...`);
     const server = app.listen(PORT, () => {
-      console.log(`✅ Server successfully listening on http://localhost:${PORT}`);
+      console.log(`\n✅ Server successfully started!`);
+      console.log(`📍 URL: http://localhost:${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔒 Security: Rate limiting enabled`);
+      console.log(`🛡️  Protection: Input sanitization active\n`);
     });
 
     server.on('error', (err) => {
@@ -96,11 +216,30 @@ const startServer = async () => {
         process.exit(1);
       }
     });
+
+    // Graceful shutdown
+    const gracefulShutdown = (signal) => {
+      console.log(`\n${signal} received. Shutting down gracefully...`);
+      server.close(() => {
+        console.log('✅ HTTP server closed');
+        process.exit(0);
+      });
+
+      // Force shutdown after 10 seconds
+      setTimeout(() => {
+        console.error('⚠️ Forcing shutdown after timeout');
+        process.exit(1);
+      }, 10000);
+    };
+
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
   } catch (error) {
     console.error("❌ Failed to start server:", error.message);
     process.exit(1);
   }
 };
 
-console.log("Starting Loran Backend...");
+console.log("🚀 Starting Loran Backend...");
 startServer();

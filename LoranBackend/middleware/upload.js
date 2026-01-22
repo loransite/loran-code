@@ -44,7 +44,21 @@ const storage = multer.diskStorage({
 
 export const uploadAiFields = multer({
   storage,
-  limits: { fileSize: 15 * 1024 * 1024 },
+  limits: { 
+    fileSize: 10 * 1024 * 1024, // 10MB max per file
+    files: 2 // Maximum 2 files
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|webp/;
+    const ext = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowedTypes.test(file.mimetype);
+    
+    if (ext && mime) {
+      return cb(null, true);
+    }
+    
+    cb(new Error('Only image files (JPEG, JPG, PNG, WEBP) are allowed'));
+  }
 }).fields([
   { name: 'file', maxCount: 1 },
   { name: 'sidePhoto', maxCount: 1 }

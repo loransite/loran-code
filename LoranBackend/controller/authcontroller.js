@@ -3,6 +3,34 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import { generateVerificationToken, sendVerificationEmail, sendWelcomeEmail, resendVerificationEmail } from '../services/emailService.js';
+
+// Helper: Validate password strength
+const validatePassword = (password) => {
+  const minLength = 8;
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  const errors = [];
+  if (password.length < minLength) errors.push(`at least ${minLength} characters`);
+  if (!hasUpperCase) errors.push('one uppercase letter');
+  if (!hasLowerCase) errors.push('one lowercase letter');
+  if (!hasNumber) errors.push('one number');
+  if (!hasSpecialChar) errors.push('one special character');
+
+  return {
+    isValid: errors.length === 0,
+    errors: errors.length > 0 ? `Password must contain ${errors.join(', ')}` : null
+  };
+};
+
+// Helper: Validate email format
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
 
 // Helper: Generate JWT token with active role
 const generateToken = (user, activeRole) => {
@@ -44,6 +72,17 @@ export const signup = async (req, res) => {
     // Validation
     if (!fullName || !email || !password) {
       return res.status(400).json({ message: "Full name, email and password are required" });
+    }
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({ message: passwordValidation.errors });
     }
 
     // Parse roles - can be array or single string
@@ -160,9 +199,24 @@ export const signup = async (req, res) => {
     if (bio) userData.bio = bio;
     if (yearsExperience) userData.yearsExperience = Number(yearsExperience) || 0;
 
+    // Generate email verification token (expires in 24 hours)
+    const verificationToken = generateVerificationToken();
+    userData.emailVerificationToken = verificationToken;
+    userData.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    userData.isEmailVerified = false;
+
     // Save user
     const newUser = new User(userData);
     await newUser.save();
+
+    // Send verification email (non-blocking)
+    try {
+      await sendVerificationEmail(newUser.email, newUser.fullName, verificationToken);
+      console.log(`📧 Verification email sent to ${newUser.email}`);
+    } catch (emailError) {
+      console.error('⚠️  Failed to send verification email:', emailError.message);
+      // Don't block signup if email fails
+    }
 
     // Generate token with first role as active role
     const activeRoleForToken = newUser.roles.includes('client') ? 'client' : newUser.roles[0];
@@ -171,10 +225,11 @@ export const signup = async (req, res) => {
     console.log(`[AUTH] User registered: ${newUser.email} (${newUser.roles.join(', ')})`);
 
     res.status(201).json({
-      message: "User created successfully",
+      message: "User created successfully. Please check your email to verify your account.",
       user: {
         ...formatUserResponse(newUser),
-        activeRole: activeRoleForToken
+        activeRole: activeRoleForToken,
+        isEmailVerified: newUser.isEmailVerified
       },
       token,
       availableRoles: newUser.roles
@@ -503,6 +558,111 @@ export const addRole = async (req, res) => {
     });
   } catch (err) {
     console.error('[AUTH] Add role error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * Verify email with token
+ * POST /api/auth/verify-email/:token
+ */
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    // Find user with valid token
+    const user = await User.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        message: "Invalid or expired verification link. Please request a new one." 
+      });
+    }
+
+    // Already verified
+    if (user.isEmailVerified) {
+      return res.status(200).json({ 
+        message: "Email already verified!",
+        alreadyVerified: true
+      });
+    }
+
+    // Mark as verified
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+
+    console.log(`✅ Email verified for user: ${user.email}`);
+
+    // Send welcome email (non-blocking)
+    try {
+      await sendWelcomeEmail(user.email, user.fullName);
+    } catch (emailError) {
+      console.error('⚠️  Failed to send welcome email:', emailError.message);
+    }
+
+    res.status(200).json({ 
+      message: "Email verified successfully! Welcome to Loran 🎉",
+      user: formatUserResponse(user)
+    });
+  } catch (error) {
+    console.error('[AUTH] Email verification error:', error);
+    res.status(500).json({ message: 'Server error during email verification' });
+  }
+};
+
+/**
+ * Resend verification email
+ * POST /api/auth/resend-verification
+ */
+export const resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    // Find user
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return res.status(200).json({ 
+        message: "If an account exists with this email, a verification link will be sent." 
+      });
+    }
+
+    // Already verified
+    if (user.isEmailVerified) {
+      return res.status(200).json({ 
+        message: "Email is already verified!" 
+      });
+    }
+
+    // Generate new token
+    const verificationToken = generateVerificationToken();
+    user.emailVerificationToken = verificationToken;
+    user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    await user.save();
+
+    // Send email
+    try {
+      await resendVerificationEmail(user.email, user.fullName, verificationToken);
+      console.log(`📧 Verification email resent to ${user.email}`);
+    } catch (emailError) {
+      console.error('❌ Failed to resend verification email:', emailError);
+      return res.status(500).json({ message: 'Failed to send verification email' });
+    }
+
+    res.status(200).json({ 
+      message: "Verification email sent! Please check your inbox." 
+    });
+  } catch (error) {
+    console.error('[AUTH] Resend verification error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

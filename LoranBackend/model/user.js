@@ -83,8 +83,22 @@ password: { type: String, required: true },
 	}],
 	resetPasswordToken: { type: String },
 	resetPasswordExpiry: { type: Date },
+	
+	// Email verification fields
+	isEmailVerified: { type: Boolean, default: false },
+	emailVerificationToken: { type: String },
+	emailVerificationExpires: { type: Date },
+	
 	createdAt: { type: Date, default: Date.now }
 });
 
+// Indexes for better query performance
+userSchema.index({ email: 1 }); // For login queries
+userSchema.index({ roles: 1 }); // For role-based queries
+userSchema.index({ designerStatus: 1 }); // For admin approval queries
+userSchema.index({ rating: -1 }); // For sorting designers by rating
+userSchema.index({ createdAt: -1 }); // For sorting by newest
+userSchema.index({ 'roles': 1, 'designerStatus': 1 }); // Compound index for designer queries
+userSchema.index({ emailVerificationToken: 1 }); // For email verification lookups
 
 export default mongoose.model('User', userSchema);

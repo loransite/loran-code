@@ -12,7 +12,7 @@ export const apiClient = axios.create({
 
 // Add token to requests automatically
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -25,20 +25,35 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle rate limiting
+    if (error.response?.status === 429) {
+      const message = error.response?.data?.message || 'Too many requests. Please try again later.';
+      if (typeof window !== 'undefined') {
+        alert(message);
+      }
+      return Promise.reject(error);
+    }
+
+    // Handle authentication errors
     if (error.response?.status === 401) {
-      // Token expired or invalid - clear storage and redirect
       const message = error.response?.data?.message || 'Session expired';
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userRole');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('availableRoles');
       
-      // Show notification before redirect
       if (typeof window !== 'undefined') {
         alert(`${message}. Please log in again.`);
         window.location.href = '/login';
       }
     }
+
+    // Handle server errors
+    if (error.response?.status >= 500) {
+      if (typeof window !== 'undefined') {
+        alert('Server error. Please try again later.');
+      }
+    }
+
     return Promise.reject(error);
   }
 );

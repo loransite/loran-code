@@ -377,42 +377,99 @@ export default function Navbar() {
       <AnimatePresence>
         {aiOpen && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-10">
+            {/* Animated Gradient Background */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm" 
-              onClick={() => setAiOpen(false)} 
-            />
+              className="fixed inset-0 overflow-hidden"
+              onClick={() => setAiOpen(false)}
+            >
+              <motion.div
+                animate={{
+                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                }}
+                transition={{
+                  duration: 15,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+                className="absolute inset-0 opacity-90"
+                style={{
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%)",
+                  backgroundSize: "400% 400%",
+                }}
+              />
+              <div className="absolute inset-0 backdrop-blur-xl bg-black/40" />
+            </motion.div>
             
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-gray-50 rounded-[32px] shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden z-[120] flex flex-col border border-white/20"
+              className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden z-[120] flex flex-col"
             >
-              <div className="p-6 border-b border-gray-100 bg-white flex items-center justify-between sticky top-0 z-10">
+              {/* Header */}
+              <div className="p-6 bg-gradient-to-r from-purple-900/95 to-indigo-900/95 backdrop-blur-xl border-b border-white/10 flex items-center justify-between sticky top-0 z-10 rounded-t-[32px]">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-600 rounded-xl text-white">
+                  <motion.div 
+                    animate={{ 
+                      rotate: [0, 360],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{
+                      rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                      scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                    }}
+                    className="p-3 bg-gradient-to-br from-yellow-400 to-pink-500 rounded-2xl text-white shadow-lg shadow-pink-500/50"
+                  >
                     <Icon name="ai" />
-                  </div>
+                  </motion.div>
                   <div>
-                    <h2 className="text-xl font-black text-gray-900 leading-tight">AI Measurement Studio</h2>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Powered by Precision Vision API</p>
+                    <h2 className="text-2xl font-black text-white leading-tight">AI Measurement Studio</h2>
+                    <p className="text-xs text-purple-200 font-bold uppercase tracking-wider">✨ Advanced Body Scanning Technology</p>
                   </div>
                 </div>
-                <button 
+                <motion.button 
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setAiOpen(false)} 
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-900"
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/80 hover:text-white"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l18 18" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                </button>
+                </motion.button>
               </div>
 
-              <div className="overflow-y-auto flex-1 p-6 md:p-8">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Content Area with Animated Background */}
+              <div className="overflow-y-auto flex-1 p-6 md:p-8 relative bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-indigo-900/95 backdrop-blur-xl rounded-b-[32px]">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 180, 360],
+                  }}
+                  transition={{
+                    duration: 30,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
+                  className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-[100px] pointer-events-none"
+                />
+                <motion.div
+                  animate={{
+                    scale: [1.2, 1, 1.2],
+                    rotate: [360, 180, 0],
+                  }}
+                  transition={{
+                    duration: 25,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
+                  className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-indigo-500/20 to-blue-500/20 rounded-full blur-[100px] pointer-events-none"
+                />
+
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
                   <div className="lg:col-span-4 space-y-6">
                     {/* @ts-ignore dynamic imports */
                     UploadForm && <UploadForm onResult={handleResult} onPreview={(u: string) => setImageSrc(u)} />}
@@ -440,14 +497,25 @@ export default function Navbar() {
                           key="placeholder"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="h-full min-h-[500px] bg-white rounded-[32px] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-center p-12"
+                          className="h-full min-h-[500px] bg-white/5 backdrop-blur-sm rounded-[32px] border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-center p-12"
                         >
-                          <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
+                          <motion.div 
+                            animate={{
+                              scale: [1, 1.1, 1],
+                              rotate: [0, 10, -10, 0]
+                            }}
+                            transition={{
+                              duration: 4,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                            className="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-6 shadow-2xl shadow-purple-500/50"
+                          >
                             <Icon name="ai" />
-                          </div>
-                          <h3 className="text-2xl font-black text-gray-900 mb-2">Ready to scan?</h3>
-                          <p className="text-gray-400 max-w-sm font-medium">
-                            Upload your front and side photos to generate your virtual 3D body profile and precise measurements.
+                          </motion.div>
+                          <h3 className="text-3xl font-black text-white mb-3">Ready to Get Measured?</h3>
+                          <p className="text-purple-200 max-w-sm font-medium text-lg">
+                            Upload your photos to unlock precise AI-powered body measurements for the perfect fit.
                           </p>
                         </motion.div>
                       )}

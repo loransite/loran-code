@@ -12,6 +12,10 @@ interface User {
   designerStatus?: string;
   profilePicture?: string;
   isEmailVerified?: boolean;
+  rating?: number;
+  totalReviews?: number;
+  height?: number;
+  bmi?: number;
 }
 
 interface AuthContextType {

@@ -68,6 +68,10 @@ export interface User {
   role: 'client' | 'designer' | 'admin';
   profilePicture?: string;
   designerStatus?: 'pending' | 'approved' | 'rejected';
+  rating?: number;
+  totalReviews?: number;
+  height?: number;
+  bmi?: number;
 }
 
 // Order type

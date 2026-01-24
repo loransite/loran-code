@@ -53,10 +53,11 @@ export default function ProfileHeader({ role }: ProfileHeaderProps) {
       // Update AuthContext with new profile data
       updateUser(res.data);
       
-      alert("✅ Profile picture updated successfully!");
-    } catch (error: any) {
+      alert("✅ Profile picture updated successfully");
+    } catch (error: unknown) {
       console.error("Upload failed:", error);
-      alert(error.response?.data?.message || "Failed to upload picture");
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err.response?.data?.message || "Failed to upload picture");
       // Revert preview on error
       if (user?.profilePicture) {
         setPreviewUrl(`${process.env.NEXT_PUBLIC_BACKEND_URL}/${user.profilePicture}`);

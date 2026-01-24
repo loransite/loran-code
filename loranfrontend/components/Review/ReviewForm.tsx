@@ -37,8 +37,9 @@ export default function ReviewForm({ orderId, designerName, onSuccess, onClose }
       );
 
       if (onSuccess) onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to submit review");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || "Failed to submit review");
     } finally {
       setSubmitting(false);
     }

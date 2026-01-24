@@ -34,9 +34,10 @@ export default function PaymentStep({ orderId, amount, email, onPaymentSuccess }
       } else {
         throw new Error("Failed to initialize payment");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Payment initialization error:", err);
-      setError(err.response?.data?.message || "Failed to initialize payment. Please try again.");
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || "Failed to initialize payment. Please try again.");
       setProcessing(false);
     }
   };

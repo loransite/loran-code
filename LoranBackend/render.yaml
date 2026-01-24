@@ -6,7 +6,8 @@ services:
     plan: free
     buildCommand: npm install
     startCommand: npm start
-    envVars:
+    envVars:Software engineer application
+    
       - key: NODE_ENV
         value: production
       - key: PORT

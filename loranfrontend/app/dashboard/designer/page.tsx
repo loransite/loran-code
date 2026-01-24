@@ -372,14 +372,17 @@ const DesignerDashboard: React.FC = () => {
                     </h4>
                     {selectedOrder.measurements ? (
                       <div className="grid grid-cols-2 gap-3">
-                        {Object.entries(selectedOrder.measurements).map(([key, value]) => (
-                          key !== '_id' && key !== 'notes' && value && (
-                            <div key={key} className="bg-gray-50 p-3 rounded-lg border border-gray-100 text-center">
-                              <p className="text-[10px] text-gray-400 uppercase font-bold">{key}</p>
-                              <p className="text-lg font-extrabold text-gray-800">{value as string}</p>
-                            </div>
-                          )
-                        ))}
+                        {Object.entries(selectedOrder.measurements).map(([key, value]) => {
+                          if (key !== '_id' && key !== 'notes' && value) {
+                            return (
+                              <div key={key} className="bg-gray-50 p-3 rounded-lg border border-gray-100 text-center">
+                                <p className="text-[10px] text-gray-400 uppercase font-bold">{key}</p>
+                                <p className="text-lg font-extrabold text-gray-800">{value as string}</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })}
                       </div>
                     ) : (
                       <div className="p-8 text-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">

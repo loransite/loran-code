@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import MeasurementStep from "@/components/Order/MeasurementStep";
 import CustomizationStep from "@/components/Order/CustomizationStep";
@@ -17,7 +17,7 @@ type OrderData = {
   orderId?: string;
 };
 
-export default function NewOrderPage() {
+function NewOrderContent() {
   const searchParams = useSearchParams();
   const [step, setStep] = useState<"measurement" | "customization" | "payment" | "complete">("measurement");
   const [orderData, setOrderData] = useState<OrderData>({
@@ -229,5 +229,13 @@ export default function NewOrderPage() {
         </motion.div>
       )}
     </div>
+  );
+}
+
+export default function NewOrderPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <NewOrderContent />
+    </Suspense>
   );
 }

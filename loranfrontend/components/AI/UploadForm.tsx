@@ -105,7 +105,7 @@ export default function UploadForm({ onResult, onPreview }: Props) {
     }, 200);
 
     try {
-      const result = await processImageWithToken(formData, token);
+      const result = await processImageWithToken(frontFile, token, {}, undefined, sideFile);
       clearInterval(progressInterval);
       setProgress(100);
       onResult(result);

@@ -95,7 +95,7 @@ export default function ItemModal({ item, onClose }: Props) {
                   // Redirect to new order flow with design details
                   const params = new URLSearchParams({
                     designId: item._id,
-                    designName: item.name,
+                    designName: item.title,
                     designImage: item.imageUrl || '',
                     price: item.price.toString(),
                   });

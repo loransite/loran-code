@@ -9,6 +9,7 @@ interface PaymentStepProps {
   orderId: string;
   amount: number;
   email: string;
+  onPaymentSuccess?: () => void;
 }
 
 export default function PaymentStep({ orderId, amount, email }: PaymentStepProps) {

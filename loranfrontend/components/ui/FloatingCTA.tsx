@@ -1,6 +1,6 @@
 // components/ui/FloatingCTA.tsx
 import { motion } from "framer-motion";
-import { floatCTA } from "@/lib/animations";
+import { floatCTA } from "@/app/lib/animations";
 import Button from "./Button";
 
 export default function FloatingCTA() {

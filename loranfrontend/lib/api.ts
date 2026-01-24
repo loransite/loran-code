@@ -85,7 +85,7 @@ export const orderAPI = {
     const query = catalogueId ? `?catalogueId=${catalogueId}` : '';
     return apiClient.get(`/api/orders/client${query}`);
   },
-  create: (data: { catalogueId: string; total: number; measurements?: any; measurementMethod?: string; shipping?: any }) =>
+  create: (data: { catalogueId: string; total: number; measurements?: Record<string, unknown>; measurementMethod?: string; shipping?: Record<string, unknown> }) =>
     apiClient.post('/api/orders', data),
   delete: (orderId: string) => apiClient.delete(`/api/orders/${orderId}`),
   getAdminOrders: () => apiClient.get('/api/orders'),

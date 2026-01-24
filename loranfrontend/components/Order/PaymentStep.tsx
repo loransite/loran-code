@@ -9,10 +9,9 @@ interface PaymentStepProps {
   orderId: string;
   amount: number;
   email: string;
-  onPaymentSuccess: () => void;
 }
 
-export default function PaymentStep({ orderId, amount, email, onPaymentSuccess }: PaymentStepProps) {
+export default function PaymentStep({ orderId, amount, email }: PaymentStepProps) {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

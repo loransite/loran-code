@@ -142,7 +142,7 @@ export default function ProfileHeader({ role }: ProfileHeaderProps) {
                 </span>
                 {user.totalReviews && user.totalReviews > 0 && (
                   <span className="text-xs text-gray-600 ml-1">
-                    ({user.totalReviews} review{user.totalReviews !== 1 ? &quot;s&quot; : &quot;&quot;})
+                    ({user.totalReviews} review{user.totalReviews !== 1 ? 's' : ''})
                   </span>
                 )}
               </div>

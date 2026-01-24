@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ['nodejs_18']
+
+[phases.install]
+cmds = ['cd LoranBackend && npm ci']
+
+[phases.build]
+cmds = ['cd LoranBackend']
+
+[start]
+cmd = 'cd LoranBackend && npm start'

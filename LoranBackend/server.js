@@ -75,6 +75,12 @@ if (process.env.NODE_ENV === "production") {
   }
 }
 
+const vercelProjectSlug = process.env.VERCEL_PROJECT_SLUG || 'loran-code';
+const isVercelPreviewHost = (host) => {
+  if (!host) return false;
+  return host === `${vercelProjectSlug}.vercel.app` || (host.startsWith(`${vercelProjectSlug}-`) && host.endsWith('.vercel.app'));
+};
+
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)
@@ -84,8 +90,14 @@ const corsOptions = {
     const normalize = (url) => (url || "").replace(/\/$/, "");
     const requested = normalize(origin);
     const allowed = allowedOrigins.map(normalize);
+    let host = null;
+    try {
+      host = new URL(origin).hostname;
+    } catch (e) {
+      host = null;
+    }
 
-    if (allowed.includes(requested)) {
+    if (allowed.includes(requested) || isVercelPreviewHost(host)) {
       return callback(null, true);
     }
 

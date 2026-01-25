@@ -247,7 +247,7 @@ export default function SignupPage() {
               className="w-full border rounded-lg p-2"
             />
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <input
                 type="text"
                 name="city"
@@ -283,7 +283,7 @@ export default function SignupPage() {
               className="w-full border rounded-lg p-2"
             />
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <label className="text-sm text-gray-600">Years of Experience</label>
                 <input

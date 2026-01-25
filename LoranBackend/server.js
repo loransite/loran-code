@@ -54,7 +54,9 @@ const upload = multer({ storage });
 // 1. Security Headers
 app.use(helmet({
   contentSecurityPolicy: false, // Disable for now, configure later
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  // Allow loading resources (images) across origins
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
 // 2. CORS Configuration
@@ -162,7 +164,11 @@ app.use(mongoSanitize({
 }));
 
 // 8. Static files
-app.use("/uploads", express.static("uploads"));
+// Ensure uploads can be consumed cross-origin by the frontend
+app.use("/uploads", (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static("uploads"));
 
 // ===== ROUTES =====
 // Auth routes with rate limiting

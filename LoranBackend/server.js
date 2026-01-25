@@ -58,27 +58,49 @@ app.use(helmet({
 }));
 
 // 2. CORS Configuration
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [process.env.FRONTEND_URL]
-  : ["http://localhost:3000", "http://127.0.0.1:3000"];
+// Support comma-separated FRONTEND_URLS or single FRONTEND_URL
+const frontendUrlsEnv = process.env.FRONTEND_URLS || process.env.FRONTEND_URL || "";
+const configuredOrigins = frontendUrlsEnv
+  .split(",")
+  .map((u) => u.trim())
+  .filter(Boolean);
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman, etc.)
-      if (!origin) return callback(null, true);
-      
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        console.warn(`⚠️ Blocked CORS request from origin: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    credentials: true,
-  })
-);
+const devOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
+const allowedOrigins = process.env.NODE_ENV === "production" ? configuredOrigins : devOrigins;
+
+if (process.env.NODE_ENV === "production") {
+  console.log("✅ CORS allowed origins:", allowedOrigins);
+  if (allowedOrigins.length === 0) {
+    console.warn("⚠️ No FRONTEND_URL(S) configured. Set FRONTEND_URL or FRONTEND_URLS in environment.");
+  }
+}
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    // Normalize by removing trailing slash
+    const normalize = (url) => (url || "").replace(/\/$/, "");
+    const requested = normalize(origin);
+    const allowed = allowedOrigins.map(normalize);
+
+    if (allowed.includes(requested)) {
+      return callback(null, true);
+    }
+
+    console.warn(`⚠️ Blocked CORS request from origin: ${origin}`);
+    // Reject without throwing to avoid 500 on preflight
+    return callback(null, false);
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+// Explicitly handle preflight for all routes
+app.options("*", cors(corsOptions));
 
 // 3. Rate Limiting - Global
 const globalLimiter = rateLimit({

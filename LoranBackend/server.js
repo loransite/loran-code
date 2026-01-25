@@ -166,7 +166,24 @@ app.use(mongoSanitize({
 // 8. Static files
 // Ensure uploads can be consumed cross-origin by the frontend
 app.use("/uploads", (req, res, next) => {
+  // Set CORP to allow cross-origin consumption
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
+  // Reflect ACAO for allowed origins to help certain clients with static assets
+  const origin = req.headers.origin;
+  if (origin) {
+    const normalize = (url) => (url || "").replace(/\/$/, "");
+    const requested = normalize(origin);
+    const allowed = allowedOrigins.map(normalize);
+    let host = null;
+    try { host = new URL(origin).hostname; } catch {}
+
+    if (allowed.includes(requested) || isVercelPreviewHost(host)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+  }
+
   next();
 }, express.static("uploads"));
 

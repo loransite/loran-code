@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   description: "Fashion marketplace for AI try-on and designer showcase.",
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -21,7 +27,7 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           <EmailVerificationBanner />
-          <main className="pt-20">{children}</main>
+          <main className="pt-20 px-4 sm:px-6 lg:px-8 max-w-screen-xl mx-auto">{children}</main>
         </AuthProvider>
       </body>
     </html>

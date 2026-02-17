@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: loran-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URLS
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: EMAIL_FROM
+        value: noreply@loran.com
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: MAX_FILE_SIZE
+        value: 10485760
+      - key: MEASURE_API_URL
+        sync: false
+      - key: MEASURE_API_KEY
+        sync: false
+      - key: MEASURE_API_FILE_FIELD
+        value: image
+      - key: MEASURE_API_SIDE_FILE_FIELD
+        value: left_side
+      - key: MEASURE_API_HEIGHT_FIELD
+        value: height_cm
+      - key: MEASURE_API_AUTH_TYPE
+        value: none
+      - key: MEASURE_API_QUERY_PARAM
+        value: api_key
+      - key: VERCEL_PROJECT_SLUG
+        sync: false

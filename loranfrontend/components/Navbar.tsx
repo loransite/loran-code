@@ -1,0 +1,520 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { ShoppingCart, User, ChevronDown, Shield, Palette, UserCircle, LogOut, CheckCircle } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useAuth } from "../lib/AuthContext"; // Import useAuth
+
+const UploadForm = dynamic(() => import("./AI/UploadForm"), { ssr: false });
+const Preview = dynamic(() => import("./AI/Preview"), { ssr: false });
+const ResultsPanel = dynamic(() => import("./AI/ResultsPanel"), { ssr: false });
+const HistoryList = dynamic(() => import("./AI/HistoryList"), { ssr: false });
+
+function Icon({ name }: { name: string }) {
+  switch (name) {
+    case "home":
+      return (
+        <svg className="w-4 h-4 inline-block mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z" />
+        </svg>
+      );
+    case "catalog":
+      return (
+        <svg className="w-4 h-4 inline-block mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" />
+        </svg>
+      );
+    case "designers":
+      return (
+        <svg className="w-4 h-4 inline-block mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z" />
+        </svg>
+      );
+    case "ai":
+      return (
+        <svg className="w-4 h-4 inline-block mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1M8 12a4 4 0 1 0 8 0 4 4 0 0 0-8 0z" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+export default function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [orderCount, setOrderCount] = useState<number>(0);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  
+  const { isLoggedIn, activeRole, logout, token, availableRoles, switchRole, user } = useAuth();
+  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setRoleMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (isLoggedIn && activeRole === 'client' && token) {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders/client`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const orders = data.orders || data || [];
+          setOrderCount(orders.length);
+        })
+        .catch(err => console.error('Failed to fetch orders:', err));
+    } else {
+      setOrderCount(0);
+    }
+  }, [isLoggedIn, activeRole, token]);
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const handleResult = (res: any) => {
+    setResult(res);
+    if (res.processedImageUrl) setImageSrc(res.processedImageUrl);
+    try {
+      const raw = localStorage.getItem("aiHistory");
+      const arr = raw ? JSON.parse(raw) : [];
+      arr.unshift({ id: Date.now().toString(), createdAt: new Date().toISOString(), thumbnail: res.processedImageUrl || null, result: res });
+      localStorage.setItem("aiHistory", JSON.stringify(arr.slice(0, 20)));
+    } catch (e) {
+      console.warn("Failed to write ai history", e);
+    }
+  };
+
+  const handleLoadHistory = (res: any) => {
+    setResult(res);
+    if (res.processedImageUrl) setImageSrc(res.processedImageUrl);
+  };
+
+  const handleUpdateBBox = (idx: number, bbox: any) => {
+    setResult((prev: any) => {
+      if (!prev) return prev;
+      const copy = { ...prev };
+      copy.measurements = copy.measurements.map((m: any, i: number) => (i === idx ? { ...m, bbox } : m));
+      return copy;
+    });
+  };
+
+  useEffect(() => {
+    if (!aiOpen) {
+      setResult(null);
+      setImageSrc(null);
+    }
+  }, [aiOpen]);
+
+  const menuVariants = { hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
+
+  return (
+    <>
+      <motion.nav className="bg-linear-to-r from-blue-600 via-indigo-600 to-purple-700 shadow-lg fixed top-0 left-0 w-full z-50" initial="hidden" animate="visible" variants={menuVariants}>
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <motion.div whileHover={{ scale: 1.05 }} className="text-white font-extrabold text-2xl tracking-wide">
+            <Link href="/">LORAN</Link>
+          </motion.div>
+
+          <div className="hidden md:flex space-x-6 text-white font-medium items-center">
+            <Link href="/" className="flex items-center hover:text-gray-200 transition"><Icon name="home" />Home</Link>
+            <Link href="/about" className="flex items-center hover:text-gray-200 transition">
+              <svg className="w-4 h-4 inline-block mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              About
+            </Link>
+            <Link href="/catalogue" className="flex items-center hover:text-gray-200 transition"><Icon name="catalog" />Catalogue</Link>
+            <Link href="/designers" className="flex items-center hover:text-gray-200 transition"><Icon name="designers" />Designers</Link>
+
+            <button onClick={() => setAiOpen(true)} className="flex items-center text-white hover:text-gray-200 transition">
+              <Icon name="ai" />AI Try-On
+            </button>
+
+            {isLoggedIn && (
+              <Link href="/order" className="flex items-center hover:text-gray-200 transition">
+                <svg className="w-4 h-4 inline-block mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                Orders
+              </Link>
+            )}
+
+            {activeRole === 'client' && (
+              <>
+                <Link href="/reviews" className="flex items-center hover:text-gray-200 transition">
+                  <svg className="w-4 h-4 inline-block mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                  </svg>
+                  Reviews
+                </Link>
+              </>
+            )}
+          </div>
+
+          <div className="hidden md:flex items-center space-x-5">
+            {isLoggedIn ? (
+              <>
+                {/* Unified Role Switcher */}
+                <div className="relative" ref={menuRef}>
+                  <button 
+                    onClick={() => setRoleMenuOpen(prev => !prev)} 
+                    className="flex items-center gap-2 text-white font-medium group"
+                  >
+                    <div className="relative">
+                      <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/50 group-hover:border-yellow-400 transition-colors">
+                        {user?.profilePicture ? (
+                          <img 
+                            src={user.profilePicture.startsWith('http') ? user.profilePicture : `${process.env.NEXT_PUBLIC_BACKEND_URL}${user.profilePicture.startsWith('/') ? '' : '/'}${user.profilePicture}`} 
+                            alt={user.fullName} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                            {user?.fullName?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <span>My Role: <span className="capitalize text-yellow-300">{activeRole}</span></span>
+                    <ChevronDown size={14} className={`transition-transform duration-300 ${roleMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {roleMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100]"
+                      >
+                        <div className="p-3 bg-gray-50 border-b border-gray-100">
+                          <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-2">Switch Workspace</p>
+                        </div>
+                        <div className="py-2">
+                          {availableRoles?.map((role) => (
+                            <button
+                              key={role}
+                              onClick={() => {
+                                switchRole(role);
+                                setRoleMenuOpen(false);
+                              }}
+                              className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${
+                                activeRole === role 
+                                  ? 'bg-blue-50 text-blue-700 font-extrabold' 
+                                  : 'text-gray-600 hover:bg-gray-50'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`p-1.5 rounded-lg ${
+                                  role === 'admin' ? 'bg-red-100 text-red-600' :
+                                  role === 'designer' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
+                                }`}>
+                                  {role === 'admin' ? <Shield size={14} /> : 
+                                   role === 'designer' ? <Palette size={14} /> : <User size={14} />}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="capitalize leading-tight font-semibold">{role} Panel</span>
+                                  {role === 'designer' && user?.designerStatus === 'pending' && (
+                                    <span className="text-[10px] text-orange-500 font-bold">Application Pending</span>
+                                  )}
+                                </div>
+                              </div>
+                              {activeRole === role && <CheckCircle size={14} className="text-blue-500" />}
+                            </button>
+                          ))}
+                        </div>
+                        
+                        <div className="border-t border-gray-100 p-3 bg-gray-50 flex flex-col gap-2">
+                          <Link 
+                            href={!activeRole ? '/login' : activeRole === 'client' ? '/dashboard/client' : activeRole === 'designer' ? '/dashboard/designer' : '/dashboard/admin'}
+                            className="w-full text-center py-2 bg-blue-600 text-white rounded-lg font-bold text-xs hover:bg-blue-700 transition-colors shadow-md"
+                            onClick={() => setRoleMenuOpen(false)}
+                          >
+                            Open Dashboard
+                          </Link>
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center justify-center gap-2 py-2 text-xs text-red-500 hover:bg-red-50 rounded-lg transition-colors font-bold border border-transparent hover:border-red-100"
+                          >
+                            <LogOut size={14} />
+                            Logout Account
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-white hover:text-gray-200 transition">Login</Link>
+                <Link href="/signup" className="bg-white text-blue-700 font-semibold px-4 py-2 rounded-full hover:bg-gray-100 transition">Sign Up</Link>
+              </>
+            )}
+
+            {isLoggedIn && activeRole === 'client' && (
+              <motion.div whileHover={{ scale: 1.1 }} className="relative">
+                <Link href="/dashboard/client">
+                  <ShoppingCart className="text-white cursor-pointer" size={24} />
+                  {orderCount > 0 && (
+                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                      {orderCount}
+                    </motion.span>
+                  )}
+                </Link>
+              </motion.div>
+            )}
+          </div>
+
+          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white text-2xl focus:outline-none hidden">
+            {isOpen ? "✕" : "☰"}
+          </button>
+        </div>
+
+        {/* Mobile Navigation - Horizontally Scrollable Carousel */}
+        <nav className="md:hidden w-full bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-700 shadow z-50">
+          <div
+            className="flex overflow-x-auto whitespace-nowrap no-scrollbar scroll-smooth snap-x snap-mandatory px-2 py-3"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            <Link href="/" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
+              Home
+            </Link>
+            <Link href="/about" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
+              About
+            </Link>
+            <Link href="/catalogue" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
+              Catalogue
+            </Link>
+            <Link href="/designers" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
+              Designers
+            </Link>
+            <button onClick={() => setAiOpen(true)} className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-bold bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 active:bg-purple-800 transition-all duration-200 snap-start">
+              AI Try-On
+            </button>
+            {isLoggedIn && (
+              <Link href="/order" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
+                Orders
+              </Link>
+            )}
+            {activeRole === 'client' && (
+              <Link href="/reviews" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
+                Reviews
+              </Link>
+            )}
+            {!isLoggedIn ? (
+              <>
+                <Link href="/login" className="inline-block px-4 py-2 mx-1 rounded-lg text-indigo-700 font-bold bg-white hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 snap-start">
+                  Login
+                </Link>
+                <Link href="/signup" className="inline-block px-4 py-2 mx-1 rounded-lg text-blue-900 font-bold bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 transition-all duration-200 snap-start">
+                  Sign Up
+                </Link>
+              </>
+            ) : (
+              <>
+                {availableRoles.length > 1 && (
+                  <div className="flex gap-2">
+                    {availableRoles.map(role => (
+                      <button
+                        key={role}
+                        onClick={() => switchRole(role)}
+                        className={`inline-block px-4 py-2 mx-1 rounded-lg font-bold text-xs transition-all duration-200 snap-start ${
+                          activeRole === role
+                            ? 'bg-white text-indigo-700 shadow-lg'
+                            : 'bg-white/5 text-white hover:bg-white/20'
+                        }`}
+                      >
+                        {role}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <Link
+                  href={!activeRole ? '/login' : activeRole === 'client' ? '/dashboard/client' : activeRole === 'designer' ? '/dashboard/designer' : '/dashboard/admin'}
+                  className="inline-block px-4 py-2 mx-1 rounded-lg text-indigo-700 font-bold bg-white hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 snap-start"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-bold bg-red-500/20 hover:bg-red-500/30 active:bg-red-600 transition-all duration-200 snap-start"
+                >
+                  Logout
+                </button>
+              </>
+            )}
+          </div>
+        </nav>
+      </motion.nav>
+
+      {/* AI Modal */}
+      <AnimatePresence>
+        {aiOpen && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-10">
+            {/* Animated Gradient Background */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 overflow-hidden"
+              onClick={() => setAiOpen(false)}
+            >
+              <motion.div
+                animate={{
+                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                }}
+                transition={{
+                  duration: 15,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+                className="absolute inset-0 opacity-90"
+                style={{
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%)",
+                  backgroundSize: "400% 400%",
+                }}
+              />
+              <div className="absolute inset-0 backdrop-blur-xl bg-black/40" />
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden z-[120] flex flex-col"
+            >
+              {/* Header */}
+              <div className="p-6 bg-gradient-to-r from-purple-900/95 to-indigo-900/95 backdrop-blur-xl border-b border-white/10 flex items-center justify-between sticky top-0 z-10 rounded-t-[32px]">
+                <div className="flex items-center gap-3">
+                  <motion.div 
+                    animate={{ 
+                      rotate: [0, 360],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{
+                      rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                      scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                    }}
+                    className="p-3 bg-gradient-to-br from-yellow-400 to-pink-500 rounded-2xl text-white shadow-lg shadow-pink-500/50"
+                  >
+                    <Icon name="ai" />
+                  </motion.div>
+                  <div>
+                    <h2 className="text-2xl font-black text-white leading-tight">AI Measurement Studio</h2>
+                    <p className="text-xs text-purple-200 font-bold uppercase tracking-wider">✨ Advanced Body Scanning Technology</p>
+                  </div>
+                </div>
+                <motion.button 
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setAiOpen(false)} 
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/80 hover:text-white"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </motion.button>
+              </div>
+
+              {/* Content Area with Animated Background */}
+              <div className="overflow-y-auto flex-1 p-6 md:p-8 relative bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-indigo-900/95 backdrop-blur-xl rounded-b-[32px]">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 180, 360],
+                  }}
+                  transition={{
+                    duration: 30,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
+                  className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-[100px] pointer-events-none"
+                />
+                <motion.div
+                  animate={{
+                    scale: [1.2, 1, 1.2],
+                    rotate: [360, 180, 0],
+                  }}
+                  transition={{
+                    duration: 25,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
+                  className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-indigo-500/20 to-blue-500/20 rounded-full blur-[100px] pointer-events-none"
+                />
+
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  <div className="lg:col-span-4 space-y-6">
+                    {/* @ts-ignore dynamic imports */
+                    UploadForm && <UploadForm onResult={handleResult} onPreview={(u: string) => setImageSrc(u)} />}
+                    {/* @ts-ignore */}
+                    {HistoryList && <HistoryList onLoad={handleLoadHistory} />}
+                  </div>
+
+                  <div className="lg:col-span-8 space-y-6">
+                    <AnimatePresence mode="wait">
+                      {imageSrc ? (
+                        <motion.div
+                          key="preview"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="space-y-6"
+                        >
+                          {/* @ts-ignore */}
+                          {Preview && <Preview src={imageSrc} measurements={result?.measurements || []} onUpdate={handleUpdateBBox} />}
+                          {/* @ts-ignore */}
+                          {ResultsPanel && <ResultsPanel measurements={result?.measurements || []} metadata={result?.metadata} />}
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="placeholder"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="h-full min-h-[500px] bg-white/5 backdrop-blur-sm rounded-[32px] border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-center p-12"
+                        >
+                          <motion.div 
+                            animate={{
+                              scale: [1, 1.1, 1],
+                              rotate: [0, 10, -10, 0]
+                            }}
+                            transition={{
+                              duration: 4,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                            className="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-6 shadow-2xl shadow-purple-500/50"
+                          >
+                            <Icon name="ai" />
+                          </motion.div>
+                          <h3 className="text-3xl font-black text-white mb-3">Ready to Get Measured?</h3>
+                          <p className="text-purple-200 max-w-sm font-medium text-lg">
+                            Upload your photos to unlock precise AI-powered body measurements for the perfect fit.
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

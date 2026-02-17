@@ -1,0 +1,10 @@
+# Exclude heavy and build output directories from Vercel upload
+.next/
+node_modules/
+uploads/
+public/uploads/
+LoranBackend/
+
+# Misc
+*.log
+.DS_Store

@@ -2,11 +2,10 @@ import "@/app/globals.css";
 import Navbar from "@/components/Navbar";
 import EmailVerificationBanner from "@/components/EmailVerificationBanner";
 import Footer from "@/components/Layouts/Footer";
-import type { Metadata } from "next";
 
 import { AuthProvider } from '@/lib/AuthContext';
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Loran – Bespoke Fashion",
   description: "Fashion marketplace for AI try-on and designer showcase.",
 };

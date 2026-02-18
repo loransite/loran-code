@@ -1,8 +1,7 @@
 ﻿import "@/app/globals.css";
 import dynamic from "next/dynamic";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Loran – Bespoke Fashion",
   description: "Fashion marketplace for AI try-on and designer showcase.",
 };

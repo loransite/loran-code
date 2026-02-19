@@ -1,7 +1,7 @@
 {
   "version": 2,
   "env": {
-    "NEXT_PUBLIC_BACKEND_URL": "@next_public_backend_url"
+    "NEXT_PUBLIC_BACKEND_URL": "https://loran-code.onrender.com"
   },
   "regions": ["fra1"]
 }

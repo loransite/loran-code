@@ -279,86 +279,99 @@ export default function Navbar() {
             )}
           </div>
 
-          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white text-2xl focus:outline-none hidden">
-            {isOpen ? "✕" : "☰"}
+          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white text-2xl focus:outline-none">
+            <span aria-hidden="true" className="select-none">{isOpen ? "✕" : "☰"}</span>
+            <span className="sr-only">Toggle navigation</span>
           </button>
         </div>
+        {/* Mobile Navigation - Toggleable Wrapped Panel */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.nav
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="md:hidden w-full bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-700 shadow z-50"
+            >
+              <div className="max-w-7xl mx-auto px-4 py-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <Link href="/" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
+                    <Icon name="home" /> Home
+                  </Link>
+                  <Link href="/about" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
+                    <svg className="w-4 h-4 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    About
+                  </Link>
+                  <Link href="/catalogue" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
+                    <Icon name="catalog" /> Catalogue
+                  </Link>
+                  <Link href="/designers" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
+                    <Icon name="designers" /> Designers
+                  </Link>
+                  <button onClick={() => { setAiOpen(true); setIsOpen(false); }} className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-bold bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 transition">
+                    <Icon name="ai" /> AI Try-On
+                  </button>
 
-        {/* Mobile Navigation - Horizontally Scrollable Carousel */}
-        <nav className="md:hidden w-full bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-700 shadow z-50">
-          <div
-            className="flex overflow-x-auto whitespace-nowrap no-scrollbar scroll-smooth snap-x snap-mandatory px-2 py-3"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-          >
-            <Link href="/" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
-              Home
-            </Link>
-            <Link href="/about" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
-              About
-            </Link>
-            <Link href="/catalogue" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
-              Catalogue
-            </Link>
-            <Link href="/designers" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
-              Designers
-            </Link>
-            <button onClick={() => setAiOpen(true)} className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-bold bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 active:bg-purple-800 transition-all duration-200 snap-start">
-              AI Try-On
-            </button>
-            {isLoggedIn && (
-              <Link href="/order" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
-                Orders
-              </Link>
-            )}
-            {activeRole === 'client' && (
-              <Link href="/reviews" className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 active:bg-white/30 transition-all duration-200 snap-start">
-                Reviews
-              </Link>
-            )}
-            {!isLoggedIn ? (
-              <>
-                <Link href="/login" className="inline-block px-4 py-2 mx-1 rounded-lg text-indigo-700 font-bold bg-white hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 snap-start">
-                  Login
-                </Link>
-                <Link href="/signup" className="inline-block px-4 py-2 mx-1 rounded-lg text-blue-900 font-bold bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 transition-all duration-200 snap-start">
-                  Sign Up
-                </Link>
-              </>
-            ) : (
-              <>
-                {availableRoles.length > 1 && (
-                  <div className="flex gap-2">
-                    {availableRoles.map(role => (
-                      <button
-                        key={role}
-                        onClick={() => switchRole(role)}
-                        className={`inline-block px-4 py-2 mx-1 rounded-lg font-bold text-xs transition-all duration-200 snap-start ${
-                          activeRole === role
-                            ? 'bg-white text-indigo-700 shadow-lg'
-                            : 'bg-white/5 text-white hover:bg-white/20'
-                        }`}
+                  {isLoggedIn && (
+                    <Link href="/order" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
+                      <svg className="w-4 h-4 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                      Orders
+                    </Link>
+                  )}
+
+                  {activeRole === 'client' && (
+                    <Link href="/reviews" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
+                      Reviews
+                    </Link>
+                  )}
+
+                  {!isLoggedIn ? (
+                    <>
+                      <Link href="/login" className="flex items-center justify-center px-4 py-2 rounded-lg text-indigo-700 font-bold bg-white hover:bg-gray-100 transition">
+                        Login
+                      </Link>
+                      <Link href="/signup" className="flex items-center justify-center px-4 py-2 rounded-lg text-blue-900 font-bold bg-yellow-400 hover:bg-yellow-300 transition">
+                        Sign Up
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      {availableRoles.length > 1 && (
+                        availableRoles.map(role => (
+                          <button
+                            key={role}
+                            onClick={() => { switchRole(role); setIsOpen(false); }}
+                            className={`flex items-center justify-center px-4 py-2 rounded-lg text-sm font-bold ${activeRole === role ? 'bg-white text-indigo-700' : 'bg-white/5 text-white hover:bg-white/20'}`}
+                          >
+                            {role}
+                          </button>
+                        ))
+                      )}
+
+                      <Link
+                        href={!activeRole ? '/login' : activeRole === 'client' ? '/dashboard/client' : activeRole === 'designer' ? '/dashboard/designer' : '/dashboard/admin'}
+                        className="flex items-center justify-center px-4 py-2 rounded-lg text-indigo-700 font-bold bg-white hover:bg-gray-100 transition"
+                        onClick={() => setIsOpen(false)}
                       >
-                        {role}
+                        Dashboard
+                      </Link>
+                      <button
+                        onClick={() => { handleLogout(); setIsOpen(false); }}
+                        className="flex items-center justify-center px-4 py-2 rounded-lg text-white font-bold bg-red-500/20 hover:bg-red-500/30"
+                      >
+                        Logout
                       </button>
-                    ))}
-                  </div>
-                )}
-                <Link
-                  href={!activeRole ? '/login' : activeRole === 'client' ? '/dashboard/client' : activeRole === 'designer' ? '/dashboard/designer' : '/dashboard/admin'}
-                  className="inline-block px-4 py-2 mx-1 rounded-lg text-indigo-700 font-bold bg-white hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 snap-start"
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="inline-block px-4 py-2 mx-1 rounded-lg text-white font-bold bg-red-500/20 hover:bg-red-500/30 active:bg-red-600 transition-all duration-200 snap-start"
-                >
-                  Logout
-                </button>
-              </>
-            )}
-          </div>
-        </nav>
+                    </>
+                  )}
+                </div>
+              </div>
+            </motion.nav>
+          )}
+        </AnimatePresence>
       </motion.nav>
 
       {/* AI Modal */}

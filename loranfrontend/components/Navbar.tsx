@@ -383,7 +383,7 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className={`fixed inset-0 overflow-hidden ${aiOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+              className="fixed inset-0 overflow-hidden pointer-events-auto"
               onClick={() => setAiOpen(false)}
             >
               <motion.div
@@ -395,13 +395,13 @@ export default function Navbar() {
                   repeat: Infinity,
                   ease: "linear"
                 }}
-                className="absolute inset-0 opacity-90"
+                className="absolute inset-0 opacity-90 pointer-events-none"
                 style={{
                   background: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%)",
                   backgroundSize: "400% 400%",
                 }}
               />
-              <div className="absolute inset-0 backdrop-blur-xl bg-black/40" />
+              <div className="absolute inset-0 backdrop-blur-xl bg-black/40 pointer-events-none" />
             </motion.div>
             
             <motion.div 

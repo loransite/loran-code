@@ -291,7 +291,7 @@ export default function Navbar() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="md:hidden w-full bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-700 shadow z-50"
+              className={`md:hidden w-full bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-700 shadow z-50 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
             >
               <div className="max-w-7xl mx-auto px-4 py-4">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -377,13 +377,13 @@ export default function Navbar() {
       {/* AI Modal */}
       <AnimatePresence>
         {aiOpen && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-10">
+            <div className={`fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-10 ${aiOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
             {/* Animated Gradient Background */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 overflow-hidden"
+              className={`fixed inset-0 overflow-hidden ${aiOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
               onClick={() => setAiOpen(false)}
             >
               <motion.div

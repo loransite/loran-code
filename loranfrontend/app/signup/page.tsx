@@ -134,12 +134,12 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
       <motion.form
         onSubmit={handleSubmit}
-        className="bg-white shadow-2xl rounded-3xl p-10 w-full max-w-md space-y-4 relative overflow-hidden"
+        className="bg-white shadow-2xl rounded-3xl p-10 w-full max-w-md space-y-4 relative overflow-hidden z-50"
         variants={formVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-50 rounded-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-50 rounded-3xl pointer-events-none -z-10" />
         <h2 className="text-2xl font-semibold text-center">Create an Account</h2>
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -151,7 +151,7 @@ export default function SignupPage() {
           value={form.fullName}
           onChange={handleChange}
           required
-          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50"
+          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 relative pointer-events-auto"
           variants={inputVariants}
           initial="initial"
           whileFocus="focus"
@@ -164,7 +164,7 @@ export default function SignupPage() {
           value={form.email}
           onChange={handleChange}
           required
-          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50"
+          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 relative pointer-events-auto"
           variants={inputVariants}
           initial="initial"
           whileFocus="focus"

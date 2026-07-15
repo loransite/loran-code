@@ -219,13 +219,16 @@ export const signup = async (req, res) => {
     const newUser = new User(userData);
     await newUser.save();
 
-    // Send verification email (non-blocking)
+    // Send the verification email without rolling back an already-created account.
+    // Return delivery state so the client does not claim an email was sent when
+    // the production mail provider is misconfigured.
+    let emailSent = false;
     try {
-      await sendVerificationEmail(newUser.email, newUser.fullName, verificationToken);
+      const emailResult = await sendVerificationEmail(newUser.email, newUser.fullName, verificationToken);
+      emailSent = emailResult.success;
       console.log(`📧 Verification email sent to ${newUser.email}`);
     } catch (emailError) {
       console.error('⚠️  Failed to send verification email:', emailError.message);
-      // Don't block signup if email fails
     }
 
     // Generate token with first role as active role
@@ -235,7 +238,10 @@ export const signup = async (req, res) => {
     console.log(`[AUTH] User registered: ${newUser.email} (${newUser.roles.join(', ')})`);
 
     res.status(201).json({
-      message: "User created successfully. Please check your email to verify your account.",
+      message: emailSent
+        ? "User created successfully. Please check your email to verify your account."
+        : "User created successfully, but the verification email could not be sent. Please contact support or try again later.",
+      emailSent,
       user: {
         ...formatUserResponse(newUser),
         activeRole: activeRoleForToken,

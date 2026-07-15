@@ -34,6 +34,14 @@ if (missingEnvVars.length > 0) {
   process.exit(1);
 }
 
+if (process.env.NODE_ENV === 'production') {
+  const missingEmailVars = ['EMAIL_USER', 'EMAIL_PASS', 'FRONTEND_URL']
+    .filter((envVar) => !process.env[envVar]);
+  if (missingEmailVars.length > 0) {
+    console.error(`❌ Email verification is disabled. Set: ${missingEmailVars.join(', ')}`);
+  }
+}
+
 // Create Express app
 const app = express();
 

@@ -23,6 +23,15 @@ const createTransporter = () => {
   });
 };
 
+const getVerificationUrl = (token) => {
+  const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
+  if (!frontendUrl) {
+    throw new Error('FRONTEND_URL is not configured');
+  }
+
+  return `${frontendUrl}/verify-email/${token}`;
+};
+
 /**
  * Generate a random verification token
  * @returns {string} 32-character hex token
@@ -40,14 +49,17 @@ export const generateVerificationToken = () => {
 export const sendVerificationEmail = async (email, fullName, token) => {
   const transporter = createTransporter();
   
-  // Skip if email not configured (dev mode)
+  // Tests do not send external email. In deployed environments, report a
+  // configuration problem instead of falsely reporting a successful send.
   if (!transporter) {
-    console.log(`📧 [DEV MODE] Email verification would be sent to: ${email}`);
-    console.log(`🔗 Verification link: ${process.env.FRONTEND_URL}/verify-email/${token}`);
-    return { success: true, devMode: true };
+    if (process.env.NODE_ENV === 'test') {
+      return { success: true, devMode: true };
+    }
+
+    throw new Error('Email service is not configured. Set EMAIL_USER and EMAIL_PASS.');
   }
 
-  const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+  const verificationUrl = getVerificationUrl(token);
 
   const mailOptions = {
     from: `"Loran Fashion" <${process.env.EMAIL_USER}>`,
@@ -395,12 +407,14 @@ export const resendVerificationEmail = async (email, fullName, token) => {
   const transporter = createTransporter();
   
   if (!transporter) {
-    console.log(`📧 [DEV MODE] Resend verification email would be sent to: ${email}`);
-    console.log(`🔗 Verification link: ${process.env.FRONTEND_URL}/verify-email/${token}`);
-    return { success: true, devMode: true };
+    if (process.env.NODE_ENV === 'test') {
+      return { success: true, devMode: true };
+    }
+
+    throw new Error('Email service is not configured. Set EMAIL_USER and EMAIL_PASS.');
   }
 
-  const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+  const verificationUrl = getVerificationUrl(token);
 
   const mailOptions = {
     from: `"Loran Fashion" <${process.env.EMAIL_USER}>`,

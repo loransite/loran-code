@@ -8,13 +8,9 @@ const router = express.Router();
 // Public: list all registered designers
 router.get('/', async (req, res) => {
   try {
-    const designers = await User.find({
-      designerStatus: 'approved',
-      $or: [
-        { roles: 'designer' },
-        { role: 'designer' },
-      ],
-    })
+    // Approval is the source of truth. Older approved accounts can be missing
+    // the newer `roles` array entry, so filtering by both fields hides them.
+    const designers = await User.find({ designerStatus: 'approved' })
       .select('_id fullName createdAt avatarUrl profilePicture')
       .sort({ createdAt: -1 });
     // Map to a compact shape for frontend

@@ -54,13 +54,11 @@ export default function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-12 px-4 flex items-center justify-center mt-20">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Invalid Link</h1>
-          <p className="text-gray-600 mb-6">This password reset link is invalid or has expired.</p>
-          <Link href="/forgot-password" className="text-indigo-600 hover:underline font-medium">
-            Request a new reset link
-          </Link>
+      <div className="min-h-screen py-12 px-4 flex items-center justify-center mt-20" style={{ background: "var(--bg)" }}>
+        <div className="max-w-md w-full p-8 rounded-2xl text-center" style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}>
+          <h1 className="text-2xl mb-4" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500, color: "#F87171" }}>Invalid Link</h1>
+          <p className="mb-6" style={{ color: "var(--muted)" }}>This password reset link is invalid or has expired.</p>
+          <Link href="/forgot-password" className="font-semibold" style={{ color: "var(--highlight)" }}>Request a new reset link</Link>
         </div>
       </div>
     );
@@ -71,16 +69,18 @@ export default function ResetPasswordPage() {
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-white rounded-lg shadow-lg p-8"
+        className="max-w-md w-full p-8 rounded-2xl"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
       >
-        <h1 className="text-3xl font-bold text-center mb-2">Reset Password</h1>
-        <p className="text-center text-gray-600 mb-6">Enter your new password below.</p>
+        <h1 className="text-3xl text-center mb-2" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500, color: "var(--text)" }}>Reset Password</h1>
+        <p className="text-center mb-6" style={{ color: "var(--muted)" }}>Enter your new password below.</p>
 
         {message && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6"
+            className="px-4 py-3 rounded-lg mb-6 text-sm"
+            style={{ background: "rgba(110,189,138,0.1)", border: "1px solid rgba(110,189,138,0.25)", color: "#6EBD8A" }}
           >
             {message}
           </motion.div>
@@ -90,7 +90,8 @@ export default function ResetPasswordPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6"
+            className="px-4 py-3 rounded-lg mb-6 text-sm"
+            style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", color: "#F87171" }}
           >
             {error}
           </motion.div>
@@ -98,31 +99,13 @@ export default function ResetPasswordPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              New Password
-            </label>
-            <input
-              type="password"
-              required
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition"
-              placeholder="••••••••"
-            />
+            <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: "var(--muted)" }}>New Password</label>
+            <input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-3 rounded-lg transition-all" style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text)", outline: "none" }} placeholder="••••••••" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition"
-              placeholder="••••••••"
-            />
+            <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: "var(--muted)" }}>Confirm Password</label>
+            <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-3 rounded-lg transition-all" style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text)", outline: "none" }} placeholder="••••••••" />
           </div>
 
           <motion.button
@@ -130,17 +113,16 @@ export default function ResetPasswordPage() {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-pink-500 to-indigo-600 text-white py-2 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-60"
+            className="w-full py-3 font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: "var(--highlight)", color: "#0E2A22", borderRadius: "3px" }}
           >
             {loading ? 'Resetting...' : 'Reset Password'}
           </motion.button>
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            <Link href="/login" className="text-indigo-600 hover:underline font-medium">
-              Back to Sign in
-            </Link>
+          <p style={{ color: "var(--muted)" }}>
+            <Link href="/login" className="font-semibold" style={{ color: "var(--highlight)" }}>Back to Sign in</Link>
           </p>
         </div>
       </motion.div>

@@ -23,7 +23,7 @@ export default function ItemCard({ item, onClick }: Props) {
       onClick={onClick}
     >
       {/* Image Container */}
-      <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100 shadow-md group-hover:shadow-xl transition-shadow duration-300">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-xl transition-shadow duration-300" style={{ background: "var(--surface-2)", border: "1px solid var(--border)", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
         <Image
           src={item.imageUrl?.startsWith('/images/') 
             ? item.imageUrl 
@@ -35,25 +35,26 @@ export default function ItemCard({ item, onClick }: Props) {
         />
 
         {/* Gradient Overlay on Hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: "linear-gradient(to top, rgba(14,42,34,0.8) 0%, transparent 100%)" }} />
       </div>
 
       {/* Info */}
       <div className="mt-4 text-center">
-        <h3 className="text-lg font-medium text-gray-900 line-clamp-1">{item.title}</h3>
-        <p className="text-xl font-bold text-pink-600 mt-1">${item.price}</p>
+        <h3 className="text-lg font-medium line-clamp-1" style={{ color: "var(--text)" }}>{item.title}</h3>
+        <p className="text-lg font-semibold mt-1" style={{ color: "var(--highlight)", fontFamily: "'JetBrains Mono', monospace" }}>₦{item.price.toLocaleString()}</p>
 
         {/* Designer Link */}
         {designerId ? (
           <Link
             href={`/designers/${designerId}`}
-            className="mt-2 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
-            onClick={(e) => e.stopPropagation()} // Prevent modal open
+            className="mt-2 inline-block text-sm font-medium transition-colors"
+            style={{ color: "var(--muted)" }}
+            onClick={(e) => e.stopPropagation()}
           >
             by {designerName} →
           </Link>
         ) : (
-          <span className="mt-2 inline-block text-sm font-medium text-indigo-600">by {designerName} →</span>
+          <span className="mt-2 inline-block text-sm font-medium" style={{ color: "var(--muted)" }}>by {designerName} →</span>
         )}
       </div>
     </motion.article>

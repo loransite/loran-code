@@ -3,13 +3,18 @@ import crypto from 'crypto';
 
 // Create transporter
 const createTransporter = () => {
+  // Never send real emails during automated tests.
+  if (process.env.NODE_ENV === 'test') {
+    return null;
+  }
+
   // Check if email is configured
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.warn('⚠️  Email service not configured. Emails will be skipped.');
     return null;
   }
 
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
@@ -313,6 +318,69 @@ export const sendWelcomeEmail = async (email, fullName) => {
   } catch (error) {
     console.error('❌ Error sending welcome email:', error);
     // Don't throw - welcome email is not critical
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send designer approval email
+ * @param {string} email - Designer email
+ * @param {string} fullName - Designer full name
+ */
+export const sendDesignerApprovalEmail = async (email, fullName) => {
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    console.log(`📧 [DEV MODE] Designer approval email would be sent to: ${email}`);
+    return { success: true, devMode: true };
+  }
+
+  const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/designer`;
+
+  const mailOptions = {
+    from: `"Loran Fashion" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: '🎉 Congratulations! Your Designer Account Has Been Approved',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f6f7fb; margin: 0; padding: 20px; }
+          .card { max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.12); }
+          .head { background: linear-gradient(135deg,#0E2A22,#1B4035); color: #E8DCC0; padding: 28px; text-align: center; }
+          .content { padding: 28px; color: #1f2937; line-height: 1.65; }
+          .btn { display: inline-block; padding: 12px 24px; background: #0E2A22; color: #E8DCC0 !important; text-decoration: none; border-radius: 999px; font-weight: 700; }
+          .foot { background: #f8fafc; color: #6b7280; text-align: center; font-size: 13px; padding: 16px; border-top: 1px solid #e5e7eb; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="head">
+            <h1 style="margin:0; font-size:30px;">Designer Approval</h1>
+          </div>
+          <div class="content">
+            <p><strong>Hi ${fullName},</strong></p>
+            <p>Congratulations! Your designer account has been approved by the Loran admin team.</p>
+            <p>You can now upload your designs and they will appear on your designer profile and catalogue for prospective clients.</p>
+            <p style="text-align:center; margin: 24px 0;">
+              <a class="btn" href="${dashboardUrl}">Open Designer Dashboard</a>
+            </p>
+            <p>We are excited to have you onboard.</p>
+          </div>
+          <div class="foot">Loran Fashion Platform</div>
+        </div>
+      </body>
+      </html>
+    `,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Designer approval email sent to ${email}`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending designer approval email:', error);
     return { success: false, error: error.message };
   }
 };

@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import request from 'supertest';
 import express from 'express';
 import mongoose from 'mongoose';
@@ -90,8 +92,8 @@ describe('Email Verification Tests', () => {
       const response = await request(app)
         .get(`/api/auth/verify-email/${verificationToken}`);
 
-      expect(response.status).toBe(200);
-      expect(response.body.alreadyVerified).toBe(true);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toContain('Invalid or expired');
     });
   });
 

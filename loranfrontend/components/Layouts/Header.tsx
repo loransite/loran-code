@@ -6,8 +6,12 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm shadow-sm">
       <nav className="container mx-auto flex items-center justify-between px-6 py-4">
-        <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-          Loran
+        <Link href="/" className="flex items-center gap-2 mr-6">
+          <img
+            src="/images/loran logo.png"
+            alt="Loran logo"
+            className="site-logo"
+          />
         </Link>
 
         <div className="hidden md:flex items-center gap-8">

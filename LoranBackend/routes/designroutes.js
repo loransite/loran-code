@@ -2,6 +2,7 @@
 import express from "express";
 import multer from "multer";
 import { protect } from "../middleware/authmiddleware.js";
+import { authorizeRoles } from "../middleware/rolemiddleware.js";
 import DesignModel from "../model/design.js";
 import User from "../model/user.js";
 import Catalogue from "../model/catalogue.js";
@@ -10,7 +11,7 @@ const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
 // GET: designs for the logged-in designer
-router.get('/mine', protect, async (req, res) => {
+router.get('/mine', protect, authorizeRoles("designer"), async (req, res) => {
   try {
     const items = await Catalogue.find({ 'designer.id': req.user.id }).sort({ createdAt: -1 });
     res.json(items);
@@ -21,7 +22,7 @@ router.get('/mine', protect, async (req, res) => {
 });
 
 // Remove the trailing space after '/designer'
-router.post("/designer", protect, upload.single("file"), async (req, res) => {
+router.post("/designer", protect, authorizeRoles("designer"), upload.single("file"), async (req, res) => {
   try {
     console.log("POST /api/designs/designer hit - user:", req.user?.id, "file:", req.file?.filename);
     const { title, price, description, category } = req.body;
@@ -58,13 +59,13 @@ router.post("/designer", protect, upload.single("file"), async (req, res) => {
 });
 
 // Allow posting to root so frontend can POST to /api/designs
-router.post("/", protect, upload.single("file"), async (req, res) => {
+router.post("/", protect, authorizeRoles("designer"), upload.single("file"), async (req, res) => {
   try {
     console.log("POST /api/designs hit - user:", req.user?.id, "file:", req.file?.filename);
     const { title, price, description, category } = req.body;
     if (!req.file) return res.status(400).json({ message: "Image required" });
     // fetch user fullName
-    const user = await User.findById(req.user.id).select("fullName");
+    const user = await User.findById(req.user.id).select("fullName designerStatus");
     const imageUrl = `/uploads/${req.file.filename}`;
 
     const newDesign = new DesignModel({
@@ -84,6 +85,8 @@ router.post("/", protect, upload.single("file"), async (req, res) => {
       price: Number(price) || 0,
       image: imageUrl,
       designer: { id: req.user.id, name: user?.fullName || "Unknown" },
+      uploadedBy: req.user.id,
+      status: user?.designerStatus === 'approved' ? 'approved' : 'pending',
     });
     await catalogueItem.save();
 

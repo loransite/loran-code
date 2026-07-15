@@ -16,6 +16,42 @@ interface UploadItem {
   createdAt: string;
 }
 
+const AVATAR_FALLBACKS = [
+  '/images/designer-1.jpg',
+  '/images/designer-2.jpg',
+  '/images/designer-3.jpg',
+  '/images/hands-sewing.jpg',
+];
+
+const pickFallback = (seed: string) => {
+  const key = String(seed || 'fallback');
+  let hash = 0;
+  for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return AVATAR_FALLBACKS[hash % AVATAR_FALLBACKS.length];
+};
+
+const getImageSrc = (value?: string | null, seed: string = 'fallback') => {
+  const fallback = pickFallback(seed);
+  if (!value) return fallback;
+
+  const raw = String(value).trim();
+  const normalized = raw.replace(/\\/g, '/').replace(/^\.\//, '');
+  if (!raw || raw === 'null' || raw === 'undefined') return fallback;
+
+  if (normalized.startsWith('http://') || normalized.startsWith('https://') || normalized.startsWith('/images/')) {
+    return normalized;
+  }
+
+  if (normalized.startsWith('/uploads/') || normalized.startsWith('uploads/')) {
+    const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '');
+    const uploadPath = normalized.startsWith('/') ? normalized : `/${normalized}`;
+    return `${backendUrl}${uploadPath}`;
+  }
+
+  if (normalized.startsWith('/')) return normalized;
+  return fallback;
+};
+
 export default function DesignerProfilePage() {
   const params = useParams() as { id?: string };
   const id = params?.id;
@@ -43,7 +79,7 @@ export default function DesignerProfilePage() {
       <div className="bg-gradient-to-r from-pink-50 to-indigo-50 rounded-xl p-6 mb-8 shadow-sm">
         <div className="flex items-center gap-6">
           <div className="h-32 w-32 rounded-full overflow-hidden bg-gray-100 ring-4 ring-white shadow">
-            <Image src={profile.avatarUrl || '/images/default-avatar.jpg'} alt={profile.name} width={128} height={128} />
+            <Image src={getImageSrc(profile.avatarUrl, profile.id || profile.name)} alt={profile.name} width={128} height={128} />
           </div>
           <div>
             <h1 className="text-3xl font-bold">{profile.name}</h1>
@@ -80,7 +116,7 @@ export default function DesignerProfilePage() {
           {profile.uploads?.map((u: any) => (
             <div key={u._id} className="bg-white rounded-lg shadow overflow-hidden group">
               <div className="relative h-64 w-full">
-                <Image src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${u.image || u.imageUrl}`} alt={u.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                <Image src={getImageSrc(u.image || u.imageUrl, u._id || u.title)} alt={u.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
               </div>
               <div className="p-4">
                 <h3 className="font-bold text-gray-800">{u.title}</h3>

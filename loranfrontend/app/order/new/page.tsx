@@ -29,6 +29,22 @@ function NewOrderContent() {
     },
   });
 
+  const getClientEmail = () => {
+    if (typeof window === "undefined") return "";
+
+    try {
+      const sessionUser = sessionStorage.getItem("user");
+      if (sessionUser) {
+        const parsed = JSON.parse(sessionUser) as { email?: string };
+        if (parsed?.email) return parsed.email;
+      }
+    } catch {
+      // Fall back to legacy key if parsing fails or session data is malformed.
+    }
+
+    return localStorage.getItem("userEmail") || "";
+  };
+
   // Check if returning from AI measurement
   useEffect(() => {
     const aiMeasurements = sessionStorage.getItem("aiMeasurements");
@@ -191,7 +207,7 @@ function NewOrderContent() {
         <PaymentStep
           orderId={orderData.orderId}
           amount={orderData.designItem.price}
-          email={localStorage.getItem("userEmail") || ""}
+          email={getClientEmail()}
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}

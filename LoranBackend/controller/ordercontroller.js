@@ -76,6 +76,23 @@ export const updateOrderStatus = async (req, res) => {
     const orderId = req.params.id;
     const { status, designerNotes } = req.body;
     if (!status) return res.status(400).json({ message: "Status is required" });
+
+    const requesterRole = req.user?.role;
+    const requesterId = req.user?.id;
+    const allowedDesignerStatuses = ['processing', 'completed'];
+
+    if (requesterRole === 'designer' && !allowedDesignerStatuses.includes(status)) {
+      return res.status(403).json({ message: 'Designers can only update orders to processing or completed.' });
+    }
+
+    const existingOrder = await Order.findById(orderId).select('designerId');
+    if (!existingOrder) return res.status(404).json({ message: "Order not found" });
+
+    if (requesterRole === 'designer') {
+      if (!existingOrder.designerId || existingOrder.designerId.toString() !== requesterId) {
+        return res.status(403).json({ message: 'You can only update your own assigned orders.' });
+      }
+    }
     
     const updateData = { status };
     if (designerNotes) updateData.designerNotes = designerNotes;
@@ -125,7 +142,11 @@ function getStatusMessage(status) {
 // Admin: get all orders
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find({}).populate('catalogueId', 'title description price').populate('userId', 'fullName email');
+    const orders = await Order.find({})
+      .populate('catalogueId', 'title description price')
+      .populate('userId', 'fullName email')
+      .populate('designerId', 'fullName email brandName')
+      .sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
     console.error('Error fetching all orders:', err);

@@ -122,10 +122,12 @@ export default function Navbar() {
 
   return (
     <>
-      <motion.nav className="bg-linear-to-r from-blue-600 via-indigo-600 to-purple-700 shadow-lg fixed top-0 left-0 w-full z-50" initial="hidden" animate="visible" variants={menuVariants}>
+      <motion.nav className="site-nav sticky top-0 left-0 w-full z-50" initial="hidden" animate="visible" variants={menuVariants}>
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <motion.div whileHover={{ scale: 1.05 }} className="text-white font-extrabold text-2xl tracking-wide">
-            <Link href="/">LORAN</Link>
+          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center mr-6">
+            <Link href="/">
+              <img src="/images/loran logo.png" alt="Loran logo" className="site-logo" style={{ verticalAlign: 'middle' }} />
+            </Link>
           </motion.div>
 
           <div className="hidden md:flex space-x-6 text-white font-medium items-center">
@@ -284,90 +286,42 @@ export default function Navbar() {
             <span className="sr-only">Toggle navigation</span>
           </button>
         </div>
-        {/* Mobile Navigation - Toggleable Wrapped Panel */}
         <AnimatePresence>
           {isOpen && (
             <motion.nav
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className={`md:hidden w-full bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-700 shadow z-50 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+              className="site-nav-mobile md:hidden w-full overflow-hidden"
             >
-              <div className="max-w-7xl mx-auto px-4 py-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <Link href="/" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
-                    <Icon name="home" /> Home
+              <div className="max-w-7xl mx-auto grid grid-cols-2 gap-3 px-4 py-4 sm:grid-cols-3">
+                {[
+                  { href: '/', label: 'Home', icon: 'home' },
+                  { href: '/about', label: 'About' },
+                  { href: '/catalogue', label: 'Catalogue', icon: 'catalog' },
+                  { href: '/designers', label: 'Designers', icon: 'designers' },
+                ].map(({ href, label, icon }) => (
+                  <Link key={href} href={href} onClick={() => setIsOpen(false)} className="flex items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-2 font-semibold text-white hover:bg-white/20">
+                    {icon && <Icon name={icon} />}{label}
                   </Link>
-                  <Link href="/about" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
-                    <svg className="w-4 h-4 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    About
-                  </Link>
-                  <Link href="/catalogue" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
-                    <Icon name="catalog" /> Catalogue
-                  </Link>
-                  <Link href="/designers" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
-                    <Icon name="designers" /> Designers
-                  </Link>
-                  <button onClick={() => { setAiOpen(true); setIsOpen(false); }} className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-bold bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 transition">
-                    <Icon name="ai" /> AI Try-On
-                  </button>
-
-                  {isLoggedIn && (
-                    <Link href="/order" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
-                      <svg className="w-4 h-4 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                      </svg>
-                      Orders
-                    </Link>
-                  )}
-
-                  {activeRole === 'client' && (
-                    <Link href="/reviews" className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-semibold bg-white/10 hover:bg-white/20 transition">
-                      Reviews
-                    </Link>
-                  )}
-
-                  {!isLoggedIn ? (
-                    <>
-                      <Link href="/login" className="flex items-center justify-center px-4 py-2 rounded-lg text-indigo-700 font-bold bg-white hover:bg-gray-100 transition">
-                        Login
-                      </Link>
-                      <Link href="/signup" className="flex items-center justify-center px-4 py-2 rounded-lg text-blue-900 font-bold bg-yellow-400 hover:bg-yellow-300 transition">
-                        Sign Up
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      {availableRoles.length > 1 && (
-                        availableRoles.map(role => (
-                          <button
-                            key={role}
-                            onClick={() => { switchRole(role); setIsOpen(false); }}
-                            className={`flex items-center justify-center px-4 py-2 rounded-lg text-sm font-bold ${activeRole === role ? 'bg-white text-indigo-700' : 'bg-white/5 text-white hover:bg-white/20'}`}
-                          >
-                            {role}
-                          </button>
-                        ))
-                      )}
-
-                      <Link
-                        href={!activeRole ? '/login' : activeRole === 'client' ? '/dashboard/client' : activeRole === 'designer' ? '/dashboard/designer' : '/dashboard/admin'}
-                        className="flex items-center justify-center px-4 py-2 rounded-lg text-indigo-700 font-bold bg-white hover:bg-gray-100 transition"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Dashboard
-                      </Link>
-                      <button
-                        onClick={() => { handleLogout(); setIsOpen(false); }}
-                        className="flex items-center justify-center px-4 py-2 rounded-lg text-white font-bold bg-red-500/20 hover:bg-red-500/30"
-                      >
-                        Logout
-                      </button>
-                    </>
-                  )}
-                </div>
+                ))}
+                <button onClick={() => { setAiOpen(true); setIsOpen(false); }} className="flex items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-2 font-semibold text-white hover:bg-white/20">
+                  <Icon name="ai" />AI Try-On
+                </button>
+                {isLoggedIn && <Link href="/order" onClick={() => setIsOpen(false)} className="flex items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-2 font-semibold text-white hover:bg-white/20">Orders</Link>}
+                {activeRole === 'client' && <Link href="/reviews" onClick={() => setIsOpen(false)} className="flex items-center justify-center rounded-lg bg-white/10 px-4 py-2 font-semibold text-white hover:bg-white/20">Reviews</Link>}
+                {!isLoggedIn ? (
+                  <>
+                    <Link href="/login" onClick={() => setIsOpen(false)} className="flex items-center justify-center rounded-lg bg-white px-4 py-2 font-bold text-[#431420]">Login</Link>
+                    <Link href="/signup" onClick={() => setIsOpen(false)} className="flex items-center justify-center rounded-lg px-4 py-2 font-bold" style={{ background: 'var(--highlight)', color: '#431420' }}>Sign Up</Link>
+                  </>
+                ) : (
+                  <>
+                    {availableRoles.length > 1 && availableRoles.map(role => <button key={role} onClick={() => { switchRole(role); setIsOpen(false); }} className={`rounded-lg px-4 py-2 text-sm font-bold ${activeRole === role ? 'bg-white text-[#431420]' : 'bg-white/10 text-white hover:bg-white/20'}`}>{role}</button>)}
+                    <Link href={!activeRole ? '/login' : `/dashboard/${activeRole}`} onClick={() => setIsOpen(false)} className="flex items-center justify-center rounded-lg bg-white px-4 py-2 font-bold text-[#431420]">Dashboard</Link>
+                    <button onClick={() => { handleLogout(); setIsOpen(false); }} className="flex items-center justify-center rounded-lg bg-red-500/20 px-4 py-2 font-bold text-white hover:bg-red-500/30">Logout</button>
+                  </>
+                )}
               </div>
             </motion.nav>
           )}

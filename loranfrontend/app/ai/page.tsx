@@ -77,9 +77,9 @@ export default function AIPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-600">
+    <div className="min-h-screen relative overflow-hidden" style={{ background: "var(--bg)" }}>
       {/* Vibrant Multi-layer Animated Background */}
-      <div className="fixed inset-0 opacity-40">
+      <div className="fixed inset-0 opacity-35">
         {/* Layer 1: Large blobs */}
         <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
         <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
@@ -94,10 +94,10 @@ export default function AIPage() {
       </div>
       
       {/* Gradient Overlay for depth */}
-      <div className="fixed inset-0 bg-gradient-to-tr from-indigo-900/20 via-transparent to-pink-900/20 pointer-events-none" />
+      <div className="fixed inset-0 pointer-events-none" style={{ background: "linear-gradient(120deg, rgba(14,42,34,0.65), rgba(124,45,59,0.18), rgba(27,64,53,0.8))" }} />
       
       {/* Mesh gradient effect */}
-      <div className="fixed inset-0 opacity-30 pointer-events-none" style={{
+      <div className="fixed inset-0 opacity-25 pointer-events-none" style={{
         backgroundImage: `
           radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.3) 0px, transparent 50%),
           radial-gradient(at 100% 0%, rgba(219, 39, 119, 0.3) 0px, transparent 50%),
@@ -113,21 +113,22 @@ export default function AIPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md rounded-full text-sm font-medium bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white mb-4 shadow-lg hover:shadow-xl transition-shadow">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4" style={{ border: "1px solid var(--border)", background: "rgba(232,220,192,0.10)", color: "var(--highlight)" }}>
             <Sparkles className="w-4 h-4" />
             AI-Powered Technology
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent drop-shadow-2xl">
+          <h1 className="text-5xl md:text-7xl font-bold mb-4" style={{ color: "var(--text)", textShadow: "0 8px 35px rgba(0,0,0,0.45)", fontFamily: "'Playfair Display', serif" }}>
             Get Your Perfect Measurements
           </h1>
-          <p className="text-xl text-white/90 max-w-2xl mx-auto drop-shadow-lg font-medium">
+          <p className="text-xl max-w-2xl mx-auto font-medium" style={{ color: "var(--muted)" }}>
             Upload your photos and let our AI technology generate accurate body measurements in seconds
           </p>
           
           {/* Tutorial Button */}
           <button
             onClick={() => setShowTutorial(true)}
-            className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-white/95 backdrop-blur-md rounded-full shadow-2xl hover:shadow-3xl transition-all hover:scale-105 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold group"
+            className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full transition-all hover:scale-105 font-bold group"
+            style={{ background: "var(--highlight)", color: "#0E2A22" }}
           >
             <BookOpen className="w-5 h-5 group-hover:rotate-12 transition" />
             How It Works
@@ -151,13 +152,14 @@ export default function AIPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 + i * 0.1 }}
-              className="bg-white/90 backdrop-blur-md rounded-2xl p-6 text-center border border-white/30 shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300"
+              className="rounded-2xl p-6 text-center hover:scale-105 transition-all duration-300"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
             >
-              <div className={`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-lg`}>
+                <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center shadow-lg" style={{ background: "var(--surface-2)", color: "var(--highlight)" }}>
                 <feature.icon className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-gray-900 mb-1">{feature.title}</h3>
-              <p className="text-sm text-gray-600">{feature.desc}</p>
+                <h3 className="font-bold mb-1" style={{ color: "var(--text)" }}>{feature.title}</h3>
+                <p className="text-sm" style={{ color: "var(--muted)" }}>{feature.desc}</p>
             </motion.div>
           ))}
         </motion.div>
@@ -169,13 +171,14 @@ export default function AIPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 border border-white/30 hover:shadow-3xl transition-shadow duration-300"
+            className="rounded-3xl p-8 transition-shadow duration-300"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
           >
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ background: "var(--surface-2)", color: "var(--highlight)" }}>
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">Upload Photos</h2>
+              <h2 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Upload Photos</h2>
             </div>
             
             <EnhancedUploadForm onResult={setResult} />
@@ -185,12 +188,13 @@ export default function AIPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl flex items-start gap-3 shadow-sm"
+              className="mt-6 p-4 rounded-xl flex items-start gap-3 shadow-sm"
+              style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
             >
-              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-900">
+                <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: "var(--highlight)" }} />
+                <div className="text-sm" style={{ color: "var(--text)" }}>
                 <p className="font-semibold mb-1">Privacy Notice</p>
-                <p className="text-blue-700">
+                  <p style={{ color: "var(--muted)" }}>
                   Your photos are processed securely and never stored on our servers. 
                   They're deleted immediately after processing.
                 </p>
@@ -203,12 +207,13 @@ export default function AIPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 border border-white/30 hover:shadow-3xl transition-shadow duration-300"
+            className="rounded-3xl p-8 transition-shadow duration-300"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
           >
             {result ? (
               <>
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ background: "rgba(110,189,138,0.2)", color: "#6EBD8A" }}>
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
@@ -218,7 +223,7 @@ export default function AIPage() {
                       ✓
                     </motion.div>
                   </div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Your Results</h2>
+                  <h2 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Your Results</h2>
                 </div>
                 <ResultsPanel 
                   measurements={result.measurements} 
@@ -241,10 +246,10 @@ export default function AIPage() {
                 >
                   <Sparkles className="w-16 h-16 text-white" />
                 </motion.div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent mb-2">
+                <h3 className="text-2xl font-bold mb-2" style={{ color: "var(--text)" }}>
                   Ready to Get Started?
                 </h3>
-                <p className="text-gray-600 text-center max-w-md">
+                <p className="text-center max-w-md" style={{ color: "var(--muted)" }}>
                   Upload your photos and enter your height to receive accurate AI-generated measurements
                 </p>
               </div>
@@ -259,17 +264,17 @@ export default function AIPage() {
           transition={{ delay: 0.7 }}
           className="mt-12 grid md:grid-cols-2 gap-6"
         >
-          <div className="bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 rounded-2xl p-6 text-white shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300">
+          <div className="rounded-2xl p-6 shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300" style={{ background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }}>
             <h3 className="text-xl font-bold mb-2">Why AI Measurements?</h3>
-            <p className="text-blue-50 text-sm leading-relaxed">
+            <p className="text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
               Traditional measuring tapes can be inconsistent and difficult to use alone. 
               Our AI analyzes your photos using advanced computer vision to provide accurate, 
               reliable measurements every time.
             </p>
           </div>
-          <div className="bg-gradient-to-br from-fuchsia-500 via-pink-500 to-rose-600 rounded-2xl p-6 text-white shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300">
+          <div className="rounded-2xl p-6 shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300" style={{ background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }}>
             <h3 className="text-xl font-bold mb-2">Perfect for Online Shopping</h3>
-            <p className="text-pink-50 text-sm leading-relaxed">
+            <p className="text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
               Use your measurements to find perfectly fitting clothes online. 
               Share them with designers for custom creations or keep them saved for easy reference.
             </p>

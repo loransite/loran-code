@@ -12,6 +12,13 @@ import { UploadForm } from '@/components/Designer/uploadform';
 import ProfileHeader from '@/components/Dashboard/ProfileHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const getErrorMessage = (err: unknown) => {
+  if (axios.isAxiosError(err)) {
+    return err.response?.data?.message || err.message || 'Request failed';
+  }
+  return err instanceof Error ? err.message : 'Request failed';
+};
+
 const DesignerDashboard: React.FC = () => {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
@@ -56,7 +63,11 @@ const DesignerDashboard: React.FC = () => {
       });
       setDesigns(res.data || []);
     } catch (err) {
-      console.error('Failed to load your designs', err);
+      const msg = getErrorMessage(err);
+      console.error(`Failed to load your designs: ${msg}`);
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        alert(msg);
+      }
       setDesigns([]);
     } finally {
       setLoading(false);
@@ -69,7 +80,11 @@ const DesignerDashboard: React.FC = () => {
       const res = await orderAPI.getDesignerOrders();
       setOrders(res.data || []);
     } catch (err) {
-      console.error('Failed to load designer orders', err);
+      const msg = getErrorMessage(err);
+      console.error(`Failed to load designer orders: ${msg}`);
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        alert(msg);
+      }
     } finally {
       setOrdersLoading(false);
     }
@@ -84,7 +99,7 @@ const DesignerDashboard: React.FC = () => {
 
   const handleUpdateStatus = async (orderId: string, status: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders/${orderId}/status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders/designer/${orderId}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -127,8 +142,9 @@ const DesignerDashboard: React.FC = () => {
       // Reset form
       setTitle(''); setPrice(''); setDescription(''); setCategory(''); setFile(null);
     } catch (err) {
-      console.error(err);
-      alert('Upload failed');
+      const msg = getErrorMessage(err);
+      console.error(`Upload failed: ${msg}`);
+      alert(msg || 'Upload failed');
     } finally {
       setUploading(false);
     }
@@ -141,7 +157,7 @@ const DesignerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="dashboard-theme min-h-screen p-4 md:p-8">
       {/* Profile Header */}
       <ProfileHeader role="designer" />
 

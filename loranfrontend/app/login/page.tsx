@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [availableRoles, setAvailableRoles] = useState<string[]>([]);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
-  const [preferredRole, setPreferredRole] = useState<string>("client");
+  const [preferredRole, setPreferredRole] = useState<string>("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -26,10 +26,15 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await apiClient.post('/api/auth/login', {
+      const payload: { email: string; password: string; role?: string } = {
         ...form,
-        role: preferredRole
-      });
+      };
+
+      if (preferredRole) {
+        payload.role = preferredRole;
+      }
+
+      const res = await apiClient.post('/api/auth/login', payload);
       
       const data = res.data;
       
@@ -41,8 +46,16 @@ export default function LoginPage() {
         login(data);
       }
     } catch (err: unknown) {
-      const error = err as AxiosError<{ message?: string }>;
-      setError(error.response?.data?.message || "Login failed");
+      const error = err as AxiosError<{ message?: string; availableRoles?: string[] }>;
+      const roles = error.response?.data?.availableRoles;
+
+      if (roles && roles.length > 1) {
+        setAvailableRoles(roles);
+        setShowRoleSelection(true);
+        setError(error.response?.data?.message || "Select a role to continue");
+      } else {
+        setError(error.response?.data?.message || "Login failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -91,17 +104,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: "var(--bg)" }}>
       {!showRoleSelection ? (
         <motion.form
           onSubmit={handleInitialLogin}
-          className="bg-white shadow-2xl rounded-3xl p-10 w-full max-w-md space-y-6 relative overflow-hidden"
+          className="w-full max-w-md space-y-6 relative overflow-hidden p-8 sm:p-10 rounded-2xl"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
           variants={formVariants}
           initial="hidden"
           animate="visible"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-50 rounded-3xl" />
-          <h2 className="text-3xl font-bold text-center text-gray-800 relative z-10">
+          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(232,220,192,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(232,220,192,0.03) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+          <h2 className="text-2xl sm:text-3xl text-center relative z-10" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500, color: "var(--text)" }}>
             Welcome Back
           </h2>
           {!process.env.NEXT_PUBLIC_BACKEND_URL && (
@@ -112,7 +126,7 @@ export default function LoginPage() {
 
           {error && (
             <motion.p
-              className="text-red-500 text-sm text-center relative z-10"
+              className="text-sm text-center relative z-10 status-error"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -129,7 +143,8 @@ export default function LoginPage() {
               value={form.email}
               onChange={handleChange}
               required
-              className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50 text-gray-700 placeholder-gray-400 transition-all duration-300 relative z-10"
+              className="w-full p-3 transition-all rounded-lg relative z-10"
+              style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text)", outline: "none" }}
               variants={inputVariants}
               initial="initial"
               whileFocus="focus"
@@ -142,7 +157,8 @@ export default function LoginPage() {
                 value={form.password}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-200 rounded-lg p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-400 bg-gray-50 text-gray-700 placeholder-gray-400 transition-all duration-300"
+                className="w-full p-3 pr-12 transition-all rounded-lg"
+                style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text)", outline: "none" }}
                 variants={inputVariants}
                 initial="initial"
                 whileFocus="focus"
@@ -150,7 +166,8 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 z-20"
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 transition-all"
+                style={{ color: "var(--muted)" }}
                 title={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
@@ -168,8 +185,20 @@ export default function LoginPage() {
           </div>
 
           <div className="relative z-10 space-y-2">
-            <label className="text-sm font-semibold text-gray-600">Login as:</label>
-            <div className="flex gap-4">
+            <label className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--muted)" }}>Login as:</label>
+            <div className="flex gap-3 flex-wrap">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="preferredRole"
+                  value=""
+                  checked={preferredRole === ""}
+                  onChange={() => setPreferredRole("")}
+                  className="w-4 h-4"
+                  style={{ accentColor: "var(--highlight)" }}
+                />
+                <span className="text-sm" style={{ color: "var(--muted)" }}>Auto</span>
+              </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="radio" 
@@ -177,9 +206,10 @@ export default function LoginPage() {
                   value="client" 
                   checked={preferredRole === "client"} 
                   onChange={() => setPreferredRole("client")}
-                  className="w-4 h-4 text-blue-600"
+                  className="w-4 h-4"
+                  style={{ accentColor: "var(--highlight)" }}
                 />
-                <span className="text-sm text-gray-700">Client</span>
+                <span className="text-sm" style={{ color: "var(--muted)" }}>Client</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
@@ -188,9 +218,10 @@ export default function LoginPage() {
                   value="designer" 
                   checked={preferredRole === "designer"} 
                   onChange={() => setPreferredRole("designer")}
-                  className="w-4 h-4 text-purple-600"
+                  className="w-4 h-4"
+                  style={{ accentColor: "var(--highlight)" }}
                 />
-                <span className="text-sm text-gray-700">Designer</span>
+                <span className="text-sm" style={{ color: "var(--muted)" }}>Designer</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
@@ -199,9 +230,10 @@ export default function LoginPage() {
                   value="admin" 
                   checked={preferredRole === "admin"} 
                   onChange={() => setPreferredRole("admin")}
-                  className="w-4 h-4 text-gray-600"
+                  className="w-4 h-4"
+                  style={{ accentColor: "var(--highlight)" }}
                 />
-                <span className="text-sm text-gray-700">Admin</span>
+                <span className="text-sm" style={{ color: "var(--muted)" }}>Admin</span>
               </label>
             </div>
           </div>
@@ -209,9 +241,10 @@ export default function LoginPage() {
           <motion.button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 relative z-10 disabled:opacity-50 disabled:cursor-not-allowed"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className="w-full py-3 font-semibold transition-all relative z-10 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: "var(--highlight)", color: "#0E2A22", borderRadius: "3px" }}
+            whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(232,220,192,0.25)" }}
+            whileTap={{ scale: 0.97 }}
           >
             {loading ? (
               <span className="flex items-center justify-center">
@@ -242,37 +275,38 @@ export default function LoginPage() {
             )}
           </motion.button>
 
-          <p className="text-sm text-center text-gray-600 relative z-10">
+          <p className="text-sm text-center relative z-10" style={{ color: "var(--muted)" }}>
             Don&apos;t have an account?{" "}
-            <a href="/signup" className="text-blue-600 font-semibold hover:underline">
+            <a href="/signup" className="font-semibold" style={{ color: "var(--highlight)" }}>
               Sign Up
             </a>
           </p>
 
-          <p className="text-sm text-center text-gray-600 relative z-10">
-            <a href="/forgot-password" className="text-blue-600 hover:underline">
+          <p className="text-sm text-center relative z-10">
+            <a href="/forgot-password" className="transition-all" style={{ color: "var(--muted)" }}>
               Forgot Password?
             </a>
           </p>
         </motion.form>
       ) : (
         <motion.div
-          className="bg-white shadow-2xl rounded-3xl p-10 w-full max-w-md space-y-6 relative overflow-hidden"
+          className="w-full max-w-md space-y-6 relative overflow-hidden p-8 sm:p-10 rounded-2xl"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
           variants={formVariants}
           initial="hidden"
           animate="visible"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-50 rounded-3xl" />
-          <h2 className="text-3xl font-bold text-center text-gray-800 relative z-10">
+          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(232,220,192,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(232,220,192,0.03) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+          <h2 className="text-2xl sm:text-3xl text-center relative z-10" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500, color: "var(--text)" }}>
             Select Your Role
           </h2>
-          <p className="text-sm text-center text-gray-600 relative z-10">
+          <p className="text-sm text-center relative z-10" style={{ color: "var(--muted)" }}>
             You have multiple roles. Choose how you want to login:
           </p>
 
           {error && (
             <motion.p
-              className="text-red-500 text-sm text-center relative z-10"
+              className="text-sm text-center relative z-10 status-error"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -287,14 +321,9 @@ export default function LoginPage() {
                 key={role}
                 onClick={() => handleRoleLogin(role)}
                 disabled={loading}
-                className={`w-full py-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 ${
-                  role === 'admin' 
-                    ? 'bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900' 
-                    : role === 'designer' 
-                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700' 
-                    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
-                } text-white`}
-                whileHover={{ scale: 1.02 }}
+                className="w-full py-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-semibold capitalize"
+                style={{ background: role === 'admin' ? 'var(--accent)' : role === 'designer' ? 'var(--surface-2)' : 'var(--highlight)', color: role === 'admin' ? 'var(--highlight)' : role === 'designer' ? 'var(--text)' : '#0E2A22', border: '1px solid var(--border)' }}
+                whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(232,220,192,0.1)" }}
                 whileTap={{ scale: 0.98 }}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,7 +343,8 @@ export default function LoginPage() {
 
           <button
             onClick={handleBackToLogin}
-            className="w-full text-gray-600 py-2 text-sm hover:text-gray-800 transition-colors relative z-10"
+            className="w-full py-2 text-sm transition-all relative z-10"
+            style={{ color: "var(--muted)" }}
           >
             ← Back to Login
           </button>

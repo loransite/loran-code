@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import request from 'supertest';
 import express from 'express';
 import mongoose from 'mongoose';
@@ -96,8 +98,8 @@ describe('Authentication Tests', () => {
           roles: ['admin']
         });
 
-      expect(response.status).toBe(403);
-      expect(response.body.message).toContain('Admin accounts cannot be created');
+      expect(response.status).toBe(400);
+      expect(response.body.message).toContain('At least one valid role is required');
     });
 
     it('should require password minimum length', async () => {

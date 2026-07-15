@@ -8,6 +8,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import mongoSanitize from "express-mongo-sanitize";
 import connectDB from "./config/db.js";
+import { activityLogger } from "./middleware/activityLogger.js";
 
 // Import Routes
 import authRoutes from "./routes/authroutes.js";
@@ -152,7 +153,15 @@ const aiLimiter = rateLimit({
 });
 
 // 6. Body Parser with size limits (MUST come before rate limiters)
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    // Preserve exact raw bytes for Paystack webhook signature verification.
+    if (req.originalUrl === '/api/payments/webhook') {
+      req.rawBody = buf;
+    }
+  },
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 7. Prevent NoSQL Injection
@@ -163,7 +172,10 @@ app.use(mongoSanitize({
   }
 }));
 
-// 8. Static files
+// 8. Activity Logging (for admin analytics and audit trail)
+app.use(activityLogger);
+
+// 9. Static files
 // Ensure uploads can be consumed cross-origin by the frontend
 app.use("/uploads", (req, res, next) => {
   // Set CORP to allow cross-origin consumption

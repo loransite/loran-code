@@ -30,7 +30,7 @@ export default function ClientDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { availableRoles, token, user: authUser } = useAuth();
+  const { availableRoles, token, user: authUser, activeRole } = useAuth();
   const [showDesignerForm, setShowDesignerForm] = useState(false);
   const [designerForm, setDesignerForm] = useState({
     brandName: "",
@@ -74,7 +74,7 @@ export default function ClientDashboard() {
     }
 
     // Check if user is logged in as client
-    if (authUser && authUser.activeRole !== "client") {
+    if (activeRole && activeRole !== "client") {
       router.push("/login");
       return;
     }
@@ -104,7 +104,7 @@ export default function ClientDashboard() {
     };
 
     fetchData();
-  }, [router]);
+  }, [router, activeRole]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -115,9 +115,9 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="dashboard-theme min-h-screen">
       {/* Header */}
-      <header className="bg-blue-600 text-white py-4">
+      <header className="dashboard-page-header py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Loran Tailoring</h1>
           <div className="flex items-center space-x-4">

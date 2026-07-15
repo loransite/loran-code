@@ -12,19 +12,41 @@ export default function Button({
   className = "",
   ...rest
 }: Props) {
-  const base = "inline-flex items-center justify-center rounded-full px-7 py-3.5 font-semibold transition-all duration-300";
+  const base =
+    "inline-flex items-center justify-center px-7 py-3.5 font-semibold tracking-wide transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8DCC0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0E2A22]";
 
-  const styles = {
-    primary: "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl",
-    secondary: "border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white",
-    ghost: "text-gray-700 hover:text-indigo-600",
+  const styles: Record<string, React.CSSProperties> = {
+    primary: {
+      background: "var(--highlight)",
+      color: "#0E2A22",
+      borderRadius: "3px",
+      border: "1px solid var(--border)",
+      fontWeight: 600,
+    },
+    secondary: {
+      background: "transparent",
+      color: "var(--text)",
+      borderRadius: "3px",
+      border: "1px solid var(--border)",
+    },
+    ghost: {
+      background: "transparent",
+      color: "var(--muted)",
+      borderRadius: "3px",
+      border: "none",
+    },
   };
 
   return (
     <motion.a
-      className={`${base} ${styles[variant]} ${className}`}
-      whileHover={{ scale: 1.06 }}
-      whileTap={{ scale: 0.96 }}
+      className={`${base} ${className}`}
+      style={styles[variant]}
+      whileHover={
+        variant === "primary"
+          ? { scale: 1.02, y: -1, boxShadow: "0 0 40px rgba(232,220,192,0.25)" }
+          : { scale: 1.02 }
+      }
+      whileTap={{ scale: 0.97 }}
       {...rest}
     >
       {children}

@@ -87,7 +87,7 @@ export default function ProfileHeader({ role }: ProfileHeaderProps) {
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-lg p-6 mb-6"
+      className="dashboard-profile-header rounded-xl shadow-lg p-6 mb-6"
     >
       <div className="flex items-center gap-6">
         {/* Profile Picture */}

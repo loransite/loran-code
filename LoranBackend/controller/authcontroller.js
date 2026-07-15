@@ -149,9 +149,16 @@ export const signup = async (req, res) => {
         existingUser.designerStatus = 'pending';
         
         await existingUser.save();
+        // Determine a sensible active role to return to the client
+        const activeRole = existingUser.roles && existingUser.roles.includes('client') ? 'client' : (existingUser.roles && existingUser.roles[0]) || 'client';
         return res.status(200).json({ 
           message: "You already have an account. Your designer application has been submitted for review!",
-          status: 'pending' 
+          status: 'pending',
+          user: {
+            ...formatUserResponse(existingUser),
+            activeRole
+          },
+          availableRoles: existingUser.roles
         });
       }
 
@@ -159,10 +166,13 @@ export const signup = async (req, res) => {
       const newRoles = [...new Set([...existingUser.roles, ...validRoles])];
       existingUser.roles = newRoles;
       await existingUser.save();
-      
+      const activeRole = existingUser.roles && existingUser.roles.includes('client') ? 'client' : (existingUser.roles && existingUser.roles[0]) || 'client';
       return res.status(200).json({ 
         message: "Account updated successfully with new roles!",
-        user: formatUserResponse(existingUser),
+        user: {
+          ...formatUserResponse(existingUser),
+          activeRole
+        },
         availableRoles: existingUser.roles
       });
     }

@@ -164,9 +164,10 @@ export default function EnhancedUploadForm({ onResult }: Props) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border-2 border-dashed transition-all ${
-            frontPhoto ? "border-indigo-400" : "border-gray-300"
+          className={`relative rounded-2xl border-2 border-dashed transition-all ${
+            frontPhoto ? "border-[#E8DCC0]" : "border-gray-500/40"
           }`}
+          style={{ background: "var(--surface-2)" }}
         >
           <input
             ref={frontInputRef}
@@ -196,26 +197,29 @@ export default function EnhancedUploadForm({ onResult }: Props) {
             </div>
           ) : showCameraOption === "front" ? (
             <div className="w-full aspect-[3/4] flex flex-col items-center justify-center p-8 gap-4">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Choose Option</h3>
+              <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Choose Option</h3>
               <button
                 onClick={() => {
                   frontInputRef.current?.click();
                 }}
-                className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 transition flex items-center justify-center gap-3 shadow-lg"
+                className="w-full py-4 px-6 rounded-xl font-medium transition flex items-center justify-center gap-3 shadow-lg"
+                style={{ background: "var(--highlight)", color: "#0E2A22" }}
               >
                 <Camera className="w-5 h-5" />
                 Take Photo with Camera
               </button>
               <button
                 onClick={openFileSelector.bind(null, "front")}
-                className="w-full py-4 px-6 bg-white border-2 border-indigo-600 text-indigo-600 rounded-xl font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-3"
+                className="w-full py-4 px-6 border-2 rounded-xl font-medium transition flex items-center justify-center gap-3"
+                style={{ background: "transparent", borderColor: "var(--highlight)", color: "var(--highlight)" }}
               >
                 <ImageIcon className="w-5 h-5" />
                 Upload from Gallery
               </button>
               <button
                 onClick={() => setShowCameraOption(null)}
-                className="text-sm text-gray-600 hover:text-gray-800 transition"
+                className="text-sm transition"
+                style={{ color: "var(--muted)" }}
               >
                 Cancel
               </button>
@@ -228,12 +232,12 @@ export default function EnhancedUploadForm({ onResult }: Props) {
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-4">
                 <Camera className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Front Photo</h3>
-              <p className="text-sm text-gray-600 text-center">
+              <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Upload Front Photo</h3>
+              <p className="text-sm text-center" style={{ color: "var(--muted)" }}>
                 Stand facing the camera<br />
                 Arms slightly away from body
               </p>
-              <div className="mt-4 px-4 py-2 bg-white rounded-lg text-sm font-medium text-indigo-600 shadow-sm">
+              <div className="mt-4 px-4 py-2 rounded-lg text-sm font-medium shadow-sm" style={{ background: "var(--surface)", color: "var(--highlight)" }}>
                 Choose Photo
               </div>
             </button>
@@ -245,9 +249,10 @@ export default function EnhancedUploadForm({ onResult }: Props) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className={`relative bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border-2 border-dashed transition-all ${
-            sidePhoto ? "border-purple-400" : "border-gray-300"
+          className={`relative rounded-2xl border-2 border-dashed transition-all ${
+            sidePhoto ? "border-[#E8DCC0]" : "border-gray-500/40"
           } ${!frontPhoto ? "opacity-50" : ""}`}
+          style={{ background: "var(--surface-2)" }}
         >
           <input
             ref={sideInputRef}
@@ -278,26 +283,29 @@ export default function EnhancedUploadForm({ onResult }: Props) {
             </div>
           ) : showCameraOption === "side" ? (
             <div className="w-full aspect-[3/4] flex flex-col items-center justify-center p-8 gap-4">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Choose Option</h3>
+              <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Choose Option</h3>
               <button
                 onClick={() => {
                   sideInputRef.current?.click();
                 }}
-                className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition flex items-center justify-center gap-3 shadow-lg"
+                className="w-full py-4 px-6 rounded-xl font-medium transition flex items-center justify-center gap-3 shadow-lg"
+                style={{ background: "var(--highlight)", color: "#0E2A22" }}
               >
                 <Camera className="w-5 h-5" />
                 Take Photo with Camera
               </button>
               <button
                 onClick={openFileSelector.bind(null, "side")}
-                className="w-full py-4 px-6 bg-white border-2 border-purple-600 text-purple-600 rounded-xl font-medium hover:bg-purple-50 transition flex items-center justify-center gap-3"
+                className="w-full py-4 px-6 border-2 rounded-xl font-medium transition flex items-center justify-center gap-3"
+                style={{ background: "transparent", borderColor: "var(--highlight)", color: "var(--highlight)" }}
               >
                 <ImageIcon className="w-5 h-5" />
                 Upload from Gallery
               </button>
               <button
                 onClick={() => setShowCameraOption(null)}
-                className="text-sm text-gray-600 hover:text-gray-800 transition"
+                className="text-sm transition"
+                style={{ color: "var(--muted)" }}
               >
                 Cancel
               </button>
@@ -311,16 +319,16 @@ export default function EnhancedUploadForm({ onResult }: Props) {
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-4">
                 <User className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Side Photo</h3>
-              <p className="text-sm text-gray-600 text-center">
+              <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Upload Side Photo</h3>
+              <p className="text-sm text-center" style={{ color: "var(--muted)" }}>
                 Turn 90° to your right<br />
                 Keep same distance from camera
               </p>
               {!frontPhoto && (
-                <p className="text-xs text-gray-500 mt-2">Upload front photo first</p>
+                <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>Upload front photo first</p>
               )}
               {frontPhoto && (
-                <div className="mt-4 px-4 py-2 bg-white rounded-lg text-sm font-medium text-purple-600 shadow-sm">
+                <div className="mt-4 px-4 py-2 rounded-lg text-sm font-medium shadow-sm" style={{ background: "var(--surface)", color: "var(--highlight)" }}>
                   Choose Photo
                 </div>
               )}
@@ -336,15 +344,16 @@ export default function EnhancedUploadForm({ onResult }: Props) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-indigo-200"
+            className="rounded-2xl p-6"
+            style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
           >
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
                 <Ruler className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Enter Your Height</h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Enter Your Height</h3>
+                <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
                   This helps calibrate accurate measurements
                 </p>
                 <div className="flex gap-3">
@@ -356,17 +365,19 @@ export default function EnhancedUploadForm({ onResult }: Props) {
                       placeholder="Enter height"
                       step="0.1"
                       min="0"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-indigo-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition text-lg font-medium"
+                      className="w-full px-4 py-3 rounded-xl border-2 outline-none transition text-lg font-medium"
+                      style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--text)" }}
                     />
                   </div>
-                  <div className="flex bg-white rounded-xl border-2 border-indigo-200 overflow-hidden">
+                  <div className="flex rounded-xl border-2 overflow-hidden" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
                     <button
                       onClick={() => setUnit("cm")}
                       className={`px-6 py-3 font-medium transition ${
                         unit === "cm"
-                          ? "bg-indigo-600 text-white"
-                          : "text-gray-600 hover:bg-gray-50"
+                          ? "text-white"
+                          : "hover:opacity-90"
                       }`}
+                      style={{ background: unit === "cm" ? "var(--highlight)" : "transparent", color: unit === "cm" ? "#0E2A22" : "var(--muted)" }}
                     >
                       cm
                     </button>
@@ -374,9 +385,10 @@ export default function EnhancedUploadForm({ onResult }: Props) {
                       onClick={() => setUnit("inches")}
                       className={`px-6 py-3 font-medium transition ${
                         unit === "inches"
-                          ? "bg-indigo-600 text-white"
-                          : "text-gray-600 hover:bg-gray-50"
+                          ? "text-white"
+                          : "hover:opacity-90"
                       }`}
+                      style={{ background: unit === "inches" ? "var(--highlight)" : "transparent", color: unit === "inches" ? "#0E2A22" : "var(--muted)" }}
                     >
                       inches
                     </button>
@@ -395,7 +407,8 @@ export default function EnhancedUploadForm({ onResult }: Props) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3"
+            className="rounded-xl p-4 flex items-start gap-3"
+            style={{ background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.35)" }}
           >
             <div className="text-red-600 text-xl">⚠️</div>
             <p className="text-red-800 font-medium">{error}</p>
@@ -411,9 +424,10 @@ export default function EnhancedUploadForm({ onResult }: Props) {
         whileTap={canGenerate && !processing ? { scale: 0.98 } : {}}
         className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl ${
           canGenerate && !processing
-            ? "bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white hover:shadow-2xl shadow-indigo-500/30"
+            ? "text-white hover:shadow-2xl"
             : "bg-gray-200 text-gray-400 cursor-not-allowed"
         }`}
+        style={canGenerate && !processing ? { background: "var(--highlight)", color: "#0E2A22", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" } : undefined}
       >
         {processing ? (
           <>
@@ -437,14 +451,15 @@ export default function EnhancedUploadForm({ onResult }: Props) {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-gray-100 rounded-full h-3 overflow-hidden">
+            <div className="rounded-full h-3 overflow-hidden" style={{ background: "var(--surface-2)" }}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
-                className="h-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600"
+                className="h-full"
+                style={{ background: "var(--highlight)" }}
               />
             </div>
-            <p className="text-center text-sm text-gray-600 mt-2">
+            <p className="text-center text-sm mt-2" style={{ color: "var(--muted)" }}>
               Our AI is analyzing your photos...
             </p>
           </motion.div>

@@ -45,33 +45,36 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-12 px-4 flex items-center justify-center mt-20">
+    <div className="min-h-screen py-12 px-4 flex items-center justify-center mt-20" style={{ background: "var(--bg)" }}>
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-white rounded-lg shadow-lg p-8"
+        className="max-w-md w-full p-8 rounded-2xl"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
       >
-        <h1 className="text-3xl font-bold text-center mb-2">Forgot Password?</h1>
-        <p className="text-center text-gray-600 mb-6">
-          Enter your email and we'll send you a link to reset your password.
+        <h1 className="text-3xl text-center mb-2" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500, color: "var(--text)" }}>Forgot Password?</h1>
+        <p className="text-center mb-6" style={{ color: "var(--muted)" }}>
+          Enter your email and we&apos;ll send you a link to reset your password.
         </p>
 
         {message && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6"
+            className="px-4 py-3 rounded-lg mb-6 text-sm"
+            style={{ background: "rgba(110,189,138,0.1)", border: "1px solid rgba(110,189,138,0.25)", color: "#6EBD8A" }}
           >
             <div className="space-y-2">
               <div>{message}</div>
               {resetUrl && (
                 <div className="mt-2 flex items-center justify-between">
-                  <a href={resetUrl} className="text-indigo-600 underline break-all" target="_blank" rel="noreferrer">
+                  <a href={resetUrl} className="underline break-all" style={{ color: "var(--highlight)" }} target="_blank" rel="noreferrer">
                     {resetUrl}
                   </a>
                   <button
                     onClick={() => navigator.clipboard.writeText(resetUrl)}
-                    className="ml-4 bg-indigo-600 text-white px-3 py-1 rounded"
+                    className="ml-4 px-3 py-1 rounded text-xs font-semibold transition-all"
+                    style={{ background: "var(--highlight)", color: "#0E2A22" }}
                   >
                     Copy
                   </button>
@@ -85,7 +88,8 @@ export default function ForgotPasswordPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6"
+            className="px-4 py-3 rounded-lg mb-6 text-sm"
+            style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", color: "#F87171" }}
           >
             {error}
           </motion.div>
@@ -93,7 +97,7 @@ export default function ForgotPasswordPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: "var(--muted)" }}>
               Email Address
             </label>
             <input
@@ -101,7 +105,8 @@ export default function ForgotPasswordPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition"
+              className="w-full px-4 py-3 rounded-lg transition-all"
+              style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text)", outline: "none" }}
               placeholder="your@email.com"
             />
           </div>
@@ -111,18 +116,17 @@ export default function ForgotPasswordPage() {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-pink-500 to-indigo-600 text-white py-2 rounded-lg font-medium hover:shadow-lg transition-shadow disabled:opacity-60"
+            className="w-full py-3 font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: "var(--highlight)", color: "#0E2A22", borderRadius: "3px" }}
           >
             {loading ? 'Sending...' : 'Send Reset Link'}
           </motion.button>
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-600">
+          <p style={{ color: "var(--muted)" }}>
             Remember your password?{' '}
-            <Link href="/login" className="text-indigo-600 hover:underline font-medium">
-              Sign in
-            </Link>
+            <Link href="/login" className="font-semibold" style={{ color: "var(--highlight)" }}>Sign in</Link>
           </p>
         </div>
       </motion.div>

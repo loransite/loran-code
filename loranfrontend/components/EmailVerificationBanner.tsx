@@ -37,25 +37,27 @@ export default function EmailVerificationBanner() {
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
-          className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white overflow-hidden"
+          className="overflow-hidden"
+          style={{ background: "var(--accent)", borderBottom: "1px solid var(--border)" }}
         >
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="container mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3 flex-1">
-              <Mail className="w-5 h-5 flex-shrink-0" />
+              <Mail className="w-5 h-5 flex-shrink-0" style={{ color: "var(--highlight)" }} />
               <div className="flex-1">
-                <p className="font-semibold">Verify your email address</p>
-                <p className="text-sm text-white/90">
+                <p className="font-semibold" style={{ color: "var(--highlight)" }}>Verify your email address</p>
+                <p className="text-sm" style={{ color: "var(--muted)" }}>
                   Check your inbox for a verification link to unlock all features.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center self-end sm:self-auto gap-2">
               {resent ? (
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full"
+                  className="flex items-center gap-2 px-4 py-2 rounded"
+                  style={{ background: "rgba(110,189,138,0.12)", color: "#6EBD8A" }}
                 >
                   <CheckCircle className="w-4 h-4" />
                   <span className="text-sm font-medium">Email sent!</span>
@@ -64,7 +66,8 @@ export default function EmailVerificationBanner() {
                 <button
                   onClick={handleResend}
                   disabled={resending}
-                  className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full transition-all disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2 rounded transition-all disabled:opacity-50"
+                  style={{ background: "rgba(232,220,192,0.12)", border: "1px solid var(--border)", color: "var(--highlight)" }}
                 >
                   <RefreshCw className={`w-4 h-4 ${resending ? 'animate-spin' : ''}`} />
                   <span className="text-sm font-medium">
@@ -75,7 +78,8 @@ export default function EmailVerificationBanner() {
 
               <button
                 onClick={() => setDismissed(true)}
-                className="p-2 hover:bg-white/20 rounded-full transition-all"
+                className="p-2 rounded transition-all"
+                style={{ color: "var(--muted)" }}
                 aria-label="Dismiss"
               >
                 <X className="w-5 h-5" />

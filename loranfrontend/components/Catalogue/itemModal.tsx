@@ -29,7 +29,8 @@ export default function ItemModal({ item, onClose }: Props) {
       onClick={onClose}
     >
       <motion.div
-        className="max-w-4xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl"
+        className="max-w-4xl w-full rounded-2xl overflow-hidden"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.5)" }}
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
@@ -52,20 +53,23 @@ export default function ItemModal({ item, onClose }: Props) {
           <div className="p-8">
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 text-2xl"
+              className="absolute top-4 right-4 text-2xl transition"
+              style={{ color: "var(--muted)" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "var(--muted)")}
             >
               ×
             </button>
 
-            <h2 className="text-2xl font-bold text-gray-900">{item.title}</h2>
+            <h2 className="text-2xl font-medium" style={{ fontFamily: "'Playfair Display', serif", color: "var(--text)" }}>{item.title}</h2>
             {typeof item.designer === 'object' && item.designer?.id ? (
-              <Link href={`/designers/${item.designer.id}`} className="text-indigo-600 font-medium hover:underline">
+              <Link href={`/designers/${item.designer.id}`} className="font-medium hover:underline transition" style={{ color: "var(--highlight)" }}>
                 by {item.designer.name}
               </Link>
             ) : (
-              <span className="text-indigo-600 font-medium">by {typeof item.designer === 'string' ? item.designer : 'Unknown'}</span>
+              <span className="font-medium" style={{ color: "var(--highlight)" }}>by {typeof item.designer === 'string' ? item.designer : 'Unknown'}</span>
             )}
-            <p className="text-3xl font-bold text-pink-600 mt-4">${item.price}</p>
+            <p className="text-3xl font-semibold mt-4" style={{ color: "var(--highlight)", fontFamily: "'JetBrains Mono', monospace" }}>₦{item.price.toLocaleString()}</p>
 
             <div className="mt-8 flex gap-3">
               <button
@@ -101,7 +105,8 @@ export default function ItemModal({ item, onClose }: Props) {
                   });
                   router.push(`/order/new?${params.toString()}`);
                 }}
-                className="flex-1 bg-gradient-to-r from-pink-500 to-indigo-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-shadow"
+                className="flex-1 py-3 font-semibold transition"
+                style={{ background: "var(--highlight)", color: "#0E2A22", borderRadius: "3px" }}
               >
                 Order Now
               </button>
@@ -130,7 +135,8 @@ export default function ItemModal({ item, onClose }: Props) {
                     alert('Failed to capture measurements');
                   }
                 }}
-                className="flex-1 border border-indigo-600 text-indigo-600 py-3 rounded-lg font-medium hover:bg-indigo-50 transition-colors"
+                className="flex-1 py-3 font-medium transition"
+                style={{ border: "1px solid var(--border)", color: "var(--text)", borderRadius: "3px" }}
               >
                 AI Try-On (manual stub)
               </button>

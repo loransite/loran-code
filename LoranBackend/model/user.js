@@ -68,6 +68,7 @@ password: { type: String, required: true },
 		docUrl: String,
 		verified: { type: Boolean, default: false }
 	}],
+	designerApprovalNotifiedAt: { type: Date },
 	paymentMethods: [{
 		method: String, // 'bank', 'paystack', 'paypal', 'mobile-money'
 		details: mongoose.Schema.Types.Mixed

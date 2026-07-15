@@ -59,8 +59,11 @@ export const webhookHandler = async (req, res) => {
 		const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
 		const signature = req.headers['x-paystack-signature'];
 
-		// req.body is a Buffer because route uses express.raw()
-		const rawBody = req.body;
+		// Prefer preserved raw bytes from global JSON parser verify hook.
+		const rawBody = req.rawBody || req.body;
+		if (!rawBody) {
+			return res.status(400).send('invalid payload');
+		}
 		const hash = crypto.createHmac('sha512', PAYSTACK_SECRET).update(rawBody).digest('hex');
 
 		if (signature !== hash) {
@@ -68,7 +71,7 @@ export const webhookHandler = async (req, res) => {
 			return res.status(400).send('invalid signature');
 		}
 
-		const event = JSON.parse(rawBody.toString());
+		const event = Buffer.isBuffer(rawBody) ? JSON.parse(rawBody.toString()) : rawBody;
 		// Only handle successful charge events
 		const eventType = event.event;
 		const data = event.data;

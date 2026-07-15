@@ -218,7 +218,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="dashboard-theme min-h-screen">
       {/* Animated Background Blobs */}
       <div className="fixed inset-0 opacity-30">
         <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />

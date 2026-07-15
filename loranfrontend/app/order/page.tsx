@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { orderAPI, paymentAPI } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 import { Order } from '@/app/types';
 
 export default function OrdersPage() {
@@ -12,11 +13,12 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [clientInfo, setClientInfo] = useState<any>(null);
+  const { activeRole, user, token } = useAuth();
 
   const fetchOrders = () => {
     setLoading(true);
-    orderAPI
-      .getClientOrders()
+    const fetcher = activeRole === 'designer' ? orderAPI.getDesignerOrders : (activeRole === 'admin' ? orderAPI.getAdminOrders : orderAPI.getClientOrders);
+    fetcher()
       .then((res) => setOrders(res.data || []))
       .catch((err) => {
         console.error('Failed to load orders:', err);
@@ -26,18 +28,10 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
     if (!token) return router.push('/login');
-    const userStr = typeof window !== 'undefined' ? sessionStorage.getItem('user') : null;
-    if (userStr) {
-      try {
-        setClientInfo(JSON.parse(userStr));
-      } catch (err) {
-        console.error('Failed to parse user info', err);
-      }
-    }
+    if (user) setClientInfo(user);
     fetchOrders();
-  }, [router]);
+  }, [router, token, activeRole]);
 
   const completePayment = async (order: Order) => {
     try {

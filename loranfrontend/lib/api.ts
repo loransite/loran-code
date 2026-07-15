@@ -25,30 +25,41 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    const status = error.response?.status;
+    const message = error.response?.data?.message;
+
     // Handle rate limiting
-    if (error.response?.status === 429) {
-      const message = error.response?.data?.message || 'Too many requests. Please try again later.';
+    if (status === 429) {
+      const rateLimitMessage = message || 'Too many requests. Please try again later.';
       if (typeof window !== 'undefined') {
-        alert(message);
+        alert(rateLimitMessage);
       }
       return Promise.reject(error);
     }
 
     // Handle authentication errors
-    if (error.response?.status === 401) {
-      const message = error.response?.data?.message || 'Session expired';
+    if (status === 401) {
+      const authMessage = message || 'Session expired';
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('user');
       sessionStorage.removeItem('availableRoles');
       
       if (typeof window !== 'undefined') {
-        alert(`${message}. Please log in again.`);
+        alert(`${authMessage}. Please log in again.`);
         window.location.href = '/login';
       }
     }
 
+    // Handle authorization errors (role/session mismatch)
+    if (status === 403) {
+      if (typeof window !== 'undefined') {
+        alert(message || 'Access denied for this action.');
+      }
+      return Promise.reject(error);
+    }
+
     // Handle server errors
-    if (error.response?.status >= 500) {
+    if (status >= 500) {
       if (typeof window !== 'undefined') {
         alert('Server error. Please try again later.');
       }

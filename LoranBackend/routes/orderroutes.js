@@ -7,8 +7,8 @@ import { getAllOrders, deleteOrder } from "../controller/ordercontroller.js";
 
 const router = express.Router();
 
-// Client: create an order
-router.post("/", protect, authorizeRoles("client"), createOrder);
+// Create an order (allow clients, designers, and admins to create orders)
+router.post("/", protect, authorizeRoles("client", "designer", "admin"), createOrder);
 
 // Client: delete an order (remove from cart)
 router.delete("/:id", protect, authorizeRoles("client"), deleteOrder);
@@ -18,6 +18,9 @@ router.get("/client", protect, authorizeRoles("client"), getClientOrders);
 
 // Designer: get orders for their designs
 router.get("/designer", protect, authorizeRoles("designer"), getDesignerOrders);
+
+// Designer: update status for their own assigned orders
+router.put("/designer/:id/status", protect, authorizeRoles("designer"), updateOrderStatus);
 
 // Admin: get all orders
 router.get("/", protect, authorizeRoles("admin"), getAllOrders);

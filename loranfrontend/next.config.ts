@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   images: {
+    // Needed for local backend uploads (http://localhost:5000/uploads/*) during development.
+    dangerouslyAllowLocalIP: true,
     remotePatterns: [
       {
         protocol: "http",

@@ -44,9 +44,7 @@ export default function UploadForm({ onResult, onPreview }: Props) {
   // Sync with user profile on load
   useEffect(() => {
     if (user) {
-      // @ts-ignore
       if (user.height) setHeight(user.height.toString());
-      // @ts-ignore
       if (user.bmi) setBmi(user.bmi.toString());
     }
   }, [user]);

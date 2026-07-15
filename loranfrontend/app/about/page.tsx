@@ -49,16 +49,18 @@ export default function AboutPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       {/* Header */}
       <motion.section
-        className="py-20 px-4 text-center bg-gradient-to-r from-pink-600 to-indigo-600 text-white"
+        className="relative py-16 md:py-20 px-4 text-center overflow-hidden"
+        style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)" }}
         initial={{ opacity: 0, y: -100 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
       >
         <motion.h1
-          className="text-6xl font-bold mb-4"
+          className="font-bold mb-4"
+          style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500, color: "var(--text)", fontSize: "clamp(32px, 9vw, 64px)" }}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -66,7 +68,8 @@ export default function AboutPage() {
           About LORAN
         </motion.h1>
         <motion.p
-          className="text-xl max-w-2xl mx-auto"
+          className="max-w-2xl mx-auto"
+          style={{ color: "var(--muted)", fontSize: "clamp(15px, 4vw, 18px)", lineHeight: 1.7 }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
@@ -80,7 +83,8 @@ export default function AboutPage() {
         <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
           <motion.div variants={slideInLeft}>
             <motion.h2
-              className="text-4xl font-bold mb-6 text-gray-800"
+              className="mb-6"
+              style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500, color: "var(--text)", fontSize: "clamp(24px, 6vw, 36px)" }}
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
@@ -109,7 +113,8 @@ export default function AboutPage() {
             </motion.p>
           </motion.div>
           <motion.div
-            className="bg-gradient-to-br from-pink-200 to-indigo-200 rounded-2xl h-64 flex items-center justify-center text-5xl"
+            className="rounded-2xl h-48 md:h-64 flex items-center justify-center text-5xl"
+            style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
             variants={slideInRight}
             whileHover={{ scale: 1.05, rotate: 5 }}
             transition={{ type: 'spring', stiffness: 300 }}
@@ -121,7 +126,8 @@ export default function AboutPage() {
 
       {/* How It Works */}
       <motion.section
-        className="py-16 px-4 bg-white"
+        className="py-12 md:py-16 px-4"
+        style={{ background: "var(--surface)" }}
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
@@ -137,7 +143,7 @@ export default function AboutPage() {
             How LORAN Works
           </motion.h2>
           <motion.div
-            className="grid md:grid-cols-4 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
@@ -151,7 +157,8 @@ export default function AboutPage() {
             ].map((step, i) => (
               <motion.div
                 key={i}
-                className="text-center p-6 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 hover:shadow-lg transition"
+                className="text-center p-5 md:p-6 rounded-xl transition-all"
+                style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
                 variants={staggerItem}
                 whileHover={{ y: -10, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
               >
@@ -163,14 +170,15 @@ export default function AboutPage() {
                   {step.icon}
                 </motion.div>
                 <motion.div
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-bold mx-auto mb-3"
+                  className="flex items-center justify-center w-10 h-10 rounded-full font-bold mx-auto mb-3"
+                  style={{ background: "var(--accent)", color: "var(--highlight)" }}
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
                 >
                   {step.num}
                 </motion.div>
-                <h3 className="text-xl font-semibold mb-2 text-gray-800">{step.title}</h3>
-                <p className="text-gray-600 text-sm">{step.desc}</p>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: "var(--text)" }}>{step.title}</h3>
+                <p className="text-sm" style={{ color: "var(--muted)" }}>{step.desc}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -188,11 +196,10 @@ export default function AboutPage() {
         <div className="grid md:grid-cols-2 gap-12">
           {/* Clients */}
           <motion.div
-            className="bg-gradient-to-br from-pink-100 to-pink-50 p-8 rounded-2xl border border-pink-200"
-            variants={slideInLeft}
-            whileHover={{ y: -5, boxShadow: '0 20px 40px rgba(236, 72, 153, 0.2)' }}
+            className="p-6 md:p-8 rounded-2xl"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
           >
-            <h3 className="text-3xl font-bold mb-6 text-pink-600 flex items-center gap-2">
+            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: "'Playfair Display', serif", color: "var(--highlight)" }}>
               👗 For Clients
             </h3>
             <ul className="space-y-4 text-gray-700">
@@ -211,14 +218,15 @@ export default function AboutPage() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
                 >
-                  <motion.span className="text-pink-600 font-bold">✓</motion.span>
-                  <span><strong>{item.title}:</strong> {item.desc}</span>
+                  <motion.span style={{ color: "var(--highlight)", fontWeight: "bold" }}>✓</motion.span>
+                  <span style={{ color: "var(--muted)" }}><strong style={{ color: "var(--text)" }}>{item.title}:</strong> {item.desc}</span>
                 </motion.li>
               ))}
             </ul>
             <motion.button
               onClick={() => router.push('/catalogue')}
-              className="mt-8 w-full bg-gradient-to-r from-pink-500 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg"
+              className="mt-8 w-full py-3 font-semibold"
+              style={{ background: "var(--highlight)", color: "#0E2A22", borderRadius: "3px" }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -228,11 +236,10 @@ export default function AboutPage() {
 
           {/* Designers */}
           <motion.div
-            className="bg-gradient-to-br from-indigo-100 to-indigo-50 p-8 rounded-2xl border border-indigo-200"
-            variants={slideInRight}
-            whileHover={{ y: -5, boxShadow: '0 20px 40px rgba(99, 102, 241, 0.2)' }}
+            className="p-6 md:p-8 rounded-2xl"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
           >
-            <h3 className="text-3xl font-bold mb-6 text-indigo-600 flex items-center gap-2">
+            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: "'Playfair Display', serif", color: "var(--highlight)" }}>
               ✂️ For Designers
             </h3>
             <ul className="space-y-4 text-gray-700">
@@ -251,14 +258,15 @@ export default function AboutPage() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
                 >
-                  <motion.span className="text-indigo-600 font-bold">✓</motion.span>
-                  <span><strong>{item.title}:</strong> {item.desc}</span>
+                  <motion.span style={{ color: "var(--highlight)", fontWeight: "bold" }}>✓</motion.span>
+                  <span style={{ color: "var(--muted)" }}><strong style={{ color: "var(--text)" }}>{item.title}:</strong> {item.desc}</span>
                 </motion.li>
               ))}
             </ul>
             <motion.button
               onClick={() => router.push('/signup')}
-              className="mt-8 w-full bg-gradient-to-r from-indigo-500 to-pink-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg"
+              className="mt-8 w-full py-3 font-semibold"
+              style={{ background: "var(--highlight)", color: "#0E2A22", borderRadius: "3px" }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -270,7 +278,8 @@ export default function AboutPage() {
 
       {/* Featured Community Stats */}
       <motion.section
-        className="py-16 px-4 bg-gradient-to-r from-pink-600 to-indigo-600 text-white"
+        className="py-12 md:py-16 px-4"
+        style={{ background: "var(--surface)" }}
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
@@ -303,14 +312,13 @@ export default function AboutPage() {
                 variants={staggerItem}
                 whileHover={{ scale: 1.1, y: -10 }}
               >
-                <motion.div
-                  className="text-5xl font-bold mb-2"
+                <motion.div className="text-4xl md:text-5xl font-bold mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--highlight)" }}
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
                 >
                   {stat.num}
                 </motion.div>
-                <p className="text-lg opacity-90">{stat.label}</p>
+                <p className="text-sm md:text-base" style={{ color: "var(--muted)" }}>{stat.label}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -334,7 +342,8 @@ export default function AboutPage() {
           The Bespoke Process
         </motion.h2>
         <motion.div
-          className="bg-gradient-to-r from-pink-50 to-indigo-50 p-8 rounded-2xl border border-pink-200"
+          className="p-6 md:p-8 rounded-2xl"
+          style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
@@ -342,7 +351,7 @@ export default function AboutPage() {
         >
           <div className="grid md:grid-cols-2 gap-8">
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
-              <h3 className="text-2xl font-bold mb-4 text-pink-600">For Clients</h3>
+              <h3 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Playfair Display', serif", color: "var(--highlight)" }}>For Clients</h3>
               <ol className="space-y-4 text-gray-700">
                 {[
                   { num: 1, title: 'Browse Designs', desc: 'Explore the catalogue of unique pieces by talented designers' },
@@ -359,14 +368,14 @@ export default function AboutPage() {
                     viewport={{ once: true }}
                     transition={{ delay: 0.3 + i * 0.1 }}
                   >
-                    <span className="font-bold text-pink-600 text-lg">{step.num}.</span>
-                    <span><strong>{step.title}:</strong> {step.desc}</span>
+                    <span className="font-bold text-lg" style={{ color: "var(--highlight)" }}>{step.num}.</span>
+                    <span style={{ color: "var(--muted)" }}><strong style={{ color: "var(--text)" }}>{step.title}:</strong> {step.desc}</span>
                   </motion.li>
                 ))}
               </ol>
             </motion.div>
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
-              <h3 className="text-2xl font-bold mb-4 text-indigo-600">For Designers</h3>
+              <h3 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Playfair Display', serif", color: "var(--highlight)" }}>For Designers</h3>
               <ol className="space-y-4 text-gray-700">
                 {[
                   { num: 1, title: 'Set Up Profile', desc: 'Create your designer profile with portfolio and rates' },
@@ -383,8 +392,8 @@ export default function AboutPage() {
                     viewport={{ once: true }}
                     transition={{ delay: 0.3 + i * 0.1 }}
                   >
-                    <span className="font-bold text-indigo-600 text-lg">{step.num}.</span>
-                    <span><strong>{step.title}:</strong> {step.desc}</span>
+                    <span className="font-bold text-lg" style={{ color: "var(--highlight)" }}>{step.num}.</span>
+                    <span style={{ color: "var(--muted)" }}><strong style={{ color: "var(--text)" }}>{step.title}:</strong> {step.desc}</span>
                   </motion.li>
                 ))}
               </ol>
@@ -427,7 +436,8 @@ export default function AboutPage() {
         >
           <motion.button
             onClick={() => router.push('/catalogue')}
-            className="px-8 py-4 bg-gradient-to-r from-pink-500 to-indigo-600 text-white rounded-lg font-semibold text-lg hover:shadow-lg"
+            className="px-8 py-4 font-semibold text-base"
+            style={{ background: "var(--highlight)", color: "#0E2A22", borderRadius: "3px" }}
             variants={staggerItem}
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
@@ -436,7 +446,8 @@ export default function AboutPage() {
           </motion.button>
           <motion.button
             onClick={() => router.push('/designers')}
-            className="px-8 py-4 bg-white border-2 border-indigo-600 text-indigo-600 rounded-lg font-semibold text-lg hover:shadow-lg"
+            className="px-8 py-4 font-semibold text-base"
+            style={{ border: "1px solid var(--border)", color: "var(--text)", borderRadius: "3px" }}
             variants={staggerItem}
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
@@ -448,7 +459,8 @@ export default function AboutPage() {
 
       {/* Footer Contact */}
       <motion.section
-        className="py-12 px-4 bg-gray-900 text-white text-center"
+        className="py-10 px-4 text-center"
+        style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
@@ -479,8 +491,7 @@ export default function AboutPage() {
           viewport={{ once: true }}
         >
           <motion.a
-            href="mailto:hello@loran.com"
-            className="hover:text-pink-400 transition"
+            href="mailto:hello@loran.com" className="transition" style={{ color: "var(--muted)" }}
             variants={staggerItem}
             whileHover={{ scale: 1.1 }}
           >
@@ -488,8 +499,7 @@ export default function AboutPage() {
           </motion.a>
           <motion.span variants={staggerItem}>•</motion.span>
           <motion.a
-            href="tel:+2341234567890"
-            className="hover:text-pink-400 transition"
+            href="tel:+2341234567890" className="transition" style={{ color: "var(--muted)" }}
             variants={staggerItem}
             whileHover={{ scale: 1.1 }}
           >

@@ -5,11 +5,12 @@ import { signup, login, forgotPassword, resetPassword, addRole, switchRole, veri
 import { protect } from '../middleware/authmiddleware.js';
 
 const router = express.Router();
+const isTestEnv = process.env.NODE_ENV === 'test';
 
 // Rate limiter for auth routes
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Increased from 5 to 10 for better UX
+  max: isTestEnv ? 1000 : 10, // Keep tests from tripping auth throttle
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,

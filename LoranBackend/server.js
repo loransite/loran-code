@@ -80,9 +80,10 @@ const configuredOrigins = frontendUrlsEnv
   .filter(Boolean);
 
 const devOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
-const allowedOrigins = process.env.NODE_ENV === "production"
-  ? [...new Set([...productionOrigins, ...configuredOrigins])]
-  : devOrigins;
+// Render currently reports this service as development, so selecting the
+// allow list based on NODE_ENV would exclude the live website. Every known
+// first-party origin is safe to support in every environment.
+const allowedOrigins = [...new Set([...devOrigins, ...productionOrigins, ...configuredOrigins])];
 
 if (process.env.NODE_ENV === "production") {
   console.log("✅ CORS allowed origins:", allowedOrigins);

@@ -7,7 +7,7 @@ import axios from 'axios';
 import { orderAPI } from '@/lib/api';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Share2, Clock, CheckCircle, Package, DollarSign, Activity, Ruler, User, Mail, FileText, X } from 'lucide-react';
+import { Share2, Clock, CheckCircle, Package, DollarSign, Activity, Ruler, User, Mail, FileText, X, Trash2 } from 'lucide-react';
 import { UploadForm } from '@/components/Designer/uploadform';
 import ProfileHeader from '@/components/Dashboard/ProfileHeader';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,6 +32,7 @@ const DesignerDashboard: React.FC = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [token, setToken] = useState<string | null>(null);
 
@@ -150,6 +151,22 @@ const DesignerDashboard: React.FC = () => {
     }
   };
 
+  const handleDeleteDesign = async (designId: string, designTitle: string) => {
+    if (!token || !window.confirm(`Delete “${designTitle}”? This cannot be undone.`)) return;
+
+    try {
+      setDeletingId(designId);
+      await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/designs/${designId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDesigns((current) => current.filter((design) => (design._id || design.id) !== designId));
+    } catch (err) {
+      alert(getErrorMessage(err));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const stats = {
     totalDesigns: designs.length,
     activeOrders: orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length,
@@ -221,7 +238,9 @@ const DesignerDashboard: React.FC = () => {
                   <div key={d._id || d.id} className="group bg-gray-50 rounded-xl overflow-hidden border border-gray-100 hover:border-purple-200 transition-all">
                     <div className="relative h-48 w-full overflow-hidden">
                       <Image
-                        src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${d.imageUrl || d.image}`}
+                        src={(d.imageUrl || d.image)?.startsWith('http')
+                          ? (d.imageUrl || d.image)
+                          : `${process.env.NEXT_PUBLIC_BACKEND_URL}${d.imageUrl || d.image}`}
                         alt={d.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -237,7 +256,19 @@ const DesignerDashboard: React.FC = () => {
                     </div>
                     <div className="p-4">
                       <h3 className="font-bold text-gray-800">{d.title}</h3>
-                      <p className="text-purple-600 font-extrabold">₦{d.price?.toLocaleString()}</p>
+                      <div className="mt-1 flex items-center justify-between gap-3">
+                        <p className="text-purple-600 font-extrabold">₦{d.price?.toLocaleString()}</p>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDesign(d._id || d.id, d.title)}
+                          disabled={deletingId === (d._id || d.id)}
+                          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          aria-label={`Delete ${d.title}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          {deletingId === (d._id || d.id) ? 'Deleting…' : 'Delete'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

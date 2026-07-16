@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { generateVerificationToken, sendVerificationEmail, sendWelcomeEmail, resendVerificationEmail } from '../services/emailService.js';
+import { storeUploadedImage } from '../services/imageStorage.js';
 
 // Helper: Validate password strength
 const validatePassword = (password) => {
@@ -67,7 +68,12 @@ const formatUserResponse = (user) => ({
 export const signup = async (req, res) => {
   try {
     const { fullName, email, password, roles, yearsExperience, bio } = req.body;
-    const profilePicture = req.file ? `uploads/${req.file.filename}` : undefined;
+    const profilePicture = req.file
+      ? await storeUploadedImage(req.file, {
+        folder: 'profiles',
+        localUrl: `/uploads/${req.file.filename}`,
+      })
+      : undefined;
 
     // Validation
     if (!fullName || !email || !password) {

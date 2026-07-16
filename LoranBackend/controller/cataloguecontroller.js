@@ -1,16 +1,22 @@
 // controllers/catalogueController.js
 import Catalogue from "../model/catalogue.js"; // adjust path/filename if different
+import { storeUploadedImage } from '../services/imageStorage.js';
 
 export const createItem = async (req, res) => {
   try {
     const { title, description } = req.body;
     if (!req.file) return res.status(400).json({ message: "Image required" });
 
+    const image = await storeUploadedImage(req.file, {
+      folder: 'catalogue',
+      localUrl: `/uploads/${req.user.id}/${req.file.filename}`,
+    });
+
     const item = new Catalogue({
       title,
       description,
       price: 0, // or get from req.body
-      image: `/uploads/${req.user.id}/${req.file.filename}`,
+      image,
       designer: { id: req.user.id, name: req.user.name },
       uploadedBy: req.user.id,
     });

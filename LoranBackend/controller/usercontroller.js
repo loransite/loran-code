@@ -1,4 +1,5 @@
 import User from "../model/user.js";
+import { storeUploadedImage } from '../services/imageStorage.js';
 
 // Get user profile
 export const getProfile = async (req, res) => {
@@ -25,7 +26,10 @@ export const updateProfile = async (req, res) => {
 
     // Handle profile picture upload
     if (req.file) {
-      updates.profilePicture = req.file.path;
+      updates.profilePicture = await storeUploadedImage(req.file, {
+        folder: 'profiles',
+        localUrl: `/uploads/${req.file.filename}`,
+      });
     }
 
     // Handle other profile updates

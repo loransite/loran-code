@@ -67,8 +67,12 @@ export default function FeaturedDesigners() {
 
     const loadFeaturedDesigners = async () => {
       try {
+        // Render's free tier can take longer than 8s to wake up from an idle
+        // sleep, which was tripping this request into the fallback path on
+        // every cold start. A longer timeout lets the primary request
+        // succeed instead of relying on the fallback every time.
         const res = await apiClient.get<FeaturedDesigner[]>("/api/designers", {
-          timeout: 8000,
+          timeout: 20000,
         });
 
         if (!isMounted) return;

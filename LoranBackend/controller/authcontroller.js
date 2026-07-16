@@ -2,8 +2,7 @@ import User from '../model/user.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
-import { generateVerificationToken, sendVerificationEmail, sendWelcomeEmail, resendVerificationEmail } from '../services/emailService.js';
+import { generateVerificationToken, sendVerificationEmail, sendWelcomeEmail, resendVerificationEmail, sendPasswordResetEmail } from '../services/emailService.js';
 import { storeUploadedImage } from '../services/imageStorage.js';
 
 // Helper: Validate password strength
@@ -424,50 +423,29 @@ export const forgotPassword = async (req, res) => {
     user.resetPasswordExpiry = new Date(Date.now() + 3600000); // 1 hour
     await user.save();
 
-    // Send reset email
+    // Send reset email using the same EMAIL_USER/EMAIL_PASS credentials and
+    // FRONTEND_URL already used everywhere else, instead of the previously
+    // unused SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/BASE_URL variables.
     try {
-      const smtpHost = process.env.SMTP_HOST;
-      const smtpPort = process.env.SMTP_PORT;
-      const smtpUser = process.env.SMTP_USER;
-      const smtpPass = process.env.SMTP_PASS;
-      const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+      await sendPasswordResetEmail(user.email, user.fullName, resetToken);
+      console.log(`[AUTH] Password reset email sent to: ${email}`);
+      return res.json({ message: 'Reset link sent to email' });
+    } catch (mailErr) {
+      console.error('[AUTH] Error sending reset email:', mailErr.message);
 
-      const resetUrl = `${baseUrl}/reset-password/${resetToken}`;
-
-      if (smtpHost && smtpPort && smtpUser && smtpPass) {
-        const transporter = nodemailer.createTransport({
-          host: smtpHost,
-          port: Number(smtpPort),
-          secure: Number(smtpPort) === 465,
-          auth: { user: smtpUser, pass: smtpPass },
-        });
-
-        const fromAddress = process.env.FROM_EMAIL || smtpUser;
-        await transporter.sendMail({
-          from: fromAddress,
-          to: email,
-          subject: 'Password Reset Request — Loran',
-          text: `Click this link to reset your password (valid for 1 hour): ${resetUrl}`,
-          html: `<p>Click <a href="${resetUrl}">here</a> to reset your password (valid for 1 hour).</p>`,
-        });
-
-        console.log(`[AUTH] Password reset email sent to: ${email}`);
-        return res.json({ message: 'Reset link sent to email' });
-      } else {
-        console.warn('[AUTH] SMTP not configured — returning reset token for development');
-        return res.json({ 
-          message: 'Reset token generated (development only)', 
-          resetToken, 
-          resetUrl 
+      // Never expose the reset token/link in a production response — that
+      // would let anyone reset any account's password without owning the
+      // mailbox. Only surface it as a local development convenience.
+      if (process.env.NODE_ENV !== 'production') {
+        const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+        return res.json({
+          message: 'Reset token generated (email failed)',
+          resetToken,
+          resetUrl: `${frontendUrl}/reset-password/${resetToken}`,
         });
       }
-    } catch (mailErr) {
-      console.error('[AUTH] Error sending reset email:', mailErr);
-      return res.json({ 
-        message: 'Reset token generated (email failed)', 
-        resetToken, 
-        resetUrl: `${process.env.BASE_URL || 'http://localhost:3000'}/reset-password/${resetToken}` 
-      });
+
+      return res.status(502).json({ message: 'Unable to send reset email right now. Please try again later.' });
     }
   } catch (err) {
     console.error('[AUTH] Forgot password error:', err);

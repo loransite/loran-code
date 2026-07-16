@@ -39,6 +39,15 @@ const getVerificationUrl = (token) => {
   return `${frontendUrl}/verify-email/${token}`;
 };
 
+const getPasswordResetUrl = (token) => {
+  const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
+  if (!frontendUrl) {
+    throw new Error('FRONTEND_URL is not configured');
+  }
+
+  return `${frontendUrl}/reset-password/${token}`;
+};
+
 /**
  * Generate a random verification token
  * @returns {string} 32-character hex token
@@ -199,6 +208,147 @@ export const sendVerificationEmail = async (email, fullName, token) => {
   } catch (error) {
     console.error('❌ Error sending verification email:', error);
     throw new Error('Failed to send verification email');
+  }
+};
+
+/**
+ * Send password reset email
+ * @param {string} email - User's email address
+ * @param {string} fullName - User's full name
+ * @param {string} token - Password reset token
+ */
+export const sendPasswordResetEmail = async (email, fullName, token) => {
+  const transporter = createTransporter();
+
+  // Tests do not send external email. In deployed environments, report a
+  // configuration problem instead of falsely reporting a successful send.
+  if (!transporter) {
+    if (process.env.NODE_ENV === 'test') {
+      return { success: true, devMode: true };
+    }
+
+    throw new Error('Email service is not configured. Set EMAIL_USER and EMAIL_PASS.');
+  }
+
+  const resetUrl = getPasswordResetUrl(token);
+
+  const mailOptions = {
+    from: `"Loran Fashion" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: '🔒 Reset Your Loran Password',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+          }
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+          }
+          .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            text-align: center;
+          }
+          .header h1 {
+            color: white;
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+          }
+          .content {
+            padding: 40px;
+          }
+          .message {
+            color: #666;
+            line-height: 1.6;
+            font-size: 16px;
+            margin-bottom: 30px;
+          }
+          .button {
+            display: inline-block;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+          }
+          .link {
+            color: #667eea;
+            word-break: break-all;
+            font-size: 12px;
+            margin-top: 20px;
+            display: block;
+          }
+          .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #856404;
+          }
+          .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            border-top: 1px solid #e9ecef;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🔒 Password Reset</h1>
+          </div>
+          <div class="content">
+            <div class="message">
+              <p>Hi ${fullName},</p>
+              <p>We received a request to reset your Loran account password. Click the button below to choose a new password:</p>
+            </div>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" class="button">Reset Password</a>
+            </div>
+            <div class="message">
+              <p>Or copy and paste this link into your browser:</p>
+              <span class="link">${resetUrl}</span>
+            </div>
+            <div class="warning">
+              ⚠️ This link will expire in 1 hour. If you didn't request a password reset, you can safely ignore this email.
+            </div>
+          </div>
+          <div class="footer">
+            <p><strong>Loran Fashion Platform</strong></p>
+            <p>© 2026 Loran. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Password reset email sent to ${email}`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending password reset email:', error);
+    throw new Error('Failed to send password reset email');
   }
 };
 

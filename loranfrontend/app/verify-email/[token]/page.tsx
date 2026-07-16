@@ -24,7 +24,7 @@ export default function VerifyEmailPage() {
           return;
         }
 
-        const response = await apiClient.get(`/auth/verify-email/${token}`);
+        const response = await apiClient.get(`/api/auth/verify-email/${token}`);
         
         if (response.data.alreadyVerified) {
           setStatus('already-verified');

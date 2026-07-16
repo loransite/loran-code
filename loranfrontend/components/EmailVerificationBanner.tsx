@@ -20,7 +20,7 @@ export default function EmailVerificationBanner() {
   const handleResend = async () => {
     try {
       setResending(true);
-      await apiClient.post('/auth/resend-verification', { email: user.email });
+      await apiClient.post('/api/auth/resend-verification', { email: user.email });
       setResent(true);
       setTimeout(() => setResent(false), 5000);
     } catch (error) {

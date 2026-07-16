@@ -205,7 +205,7 @@ app.use("/uploads", (req, res, next) => {
   }
 
   next();
-}, express.static("uploads"));
+}, express.static(path.join(process.cwd(), "public", "uploads")));
 
 // ===== ROUTES =====
 // Auth routes with rate limiting

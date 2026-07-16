@@ -10,8 +10,9 @@ export const createItem = async (req, res) => {
       title,
       description,
       price: 0, // or get from req.body
-      imageUrl: `/uploads/${req.user.id}/${req.file.filename}`,
+      image: `/uploads/${req.user.id}/${req.file.filename}`,
       designer: { id: req.user.id, name: req.user.name },
+      uploadedBy: req.user.id,
     });
 
     await item.save();

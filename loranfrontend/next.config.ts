@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Public variables are embedded at build time. The fallback keeps the
+  // deployed frontend connected to the Render API if a Vercel environment
+  // variable has not yet been added in the project dashboard.
+  env: {
+    NEXT_PUBLIC_BACKEND_URL:
+      process.env.NEXT_PUBLIC_BACKEND_URL || "https://loran-code.onrender.com",
+  },
   typescript: {
     ignoreBuildErrors: false,
   },

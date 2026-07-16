@@ -118,7 +118,7 @@ export default function LoginPage() {
           <h2 className="text-2xl sm:text-3xl text-center relative z-10" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500, color: "var(--text)" }}>
             Welcome Back
           </h2>
-          {!process.env.NEXT_PUBLIC_BACKEND_URL && (
+          {process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_BACKEND_URL && (
             <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2 text-center relative z-10">
               Backend URL missing. Using http://localhost:5000. Set NEXT_PUBLIC_BACKEND_URL in .env.local and restart dev.
             </p>

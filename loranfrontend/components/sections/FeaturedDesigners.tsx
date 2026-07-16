@@ -60,6 +60,7 @@ const getAvatarSrc = (avatarUrl?: string | null, seed: string = "fallback") => {
 
 export default function FeaturedDesigners() {
   const [designers, setDesigners] = useState<FeaturedDesigner[]>([]);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -74,13 +75,32 @@ export default function FeaturedDesigners() {
 
         if (Array.isArray(res.data)) {
           setDesigners(res.data.slice(0, 6));
+          setLoadError(false);
         } else {
           setDesigners([]);
+          setLoadError(true);
         }
-      } catch {
+      } catch (error) {
+        console.error("Failed to load featured designers:", error);
         if (isMounted) {
-          // Graceful fallback when backend is temporarily unavailable.
-          setDesigners([]);
+          // Use the deployed API directly if an older Vercel build was made
+          // without NEXT_PUBLIC_BACKEND_URL.
+          try {
+            const fallback = await fetch("https://loran-code.onrender.com/api/designers");
+            const data: unknown = await fallback.json();
+            if (isMounted && fallback.ok && Array.isArray(data)) {
+              setDesigners(data.slice(0, 6) as FeaturedDesigner[]);
+              setLoadError(false);
+              return;
+            }
+          } catch (fallbackError) {
+            console.error("Fallback featured-designers request failed:", fallbackError);
+          }
+
+          if (isMounted) {
+            setDesigners([]);
+            setLoadError(true);
+          }
         }
       }
     };
@@ -132,6 +152,9 @@ export default function FeaturedDesigners() {
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-110 rounded-2xl"
                     sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    onError={(event) => {
+                      event.currentTarget.src = pickFallback(d.id || d.name);
+                    }}
                   />
                 </div>
                 <motion.div
@@ -152,7 +175,7 @@ export default function FeaturedDesigners() {
 
           {designers.length === 0 && (
             <div className="col-span-full text-center py-8" style={{ color: "var(--muted)" }}>
-              No approved designer photos to show yet.
+              {loadError ? "Featured designers are temporarily unavailable. Please try again shortly." : "No approved designers to show yet."}
             </div>
           )}
         </div>

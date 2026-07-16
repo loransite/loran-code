@@ -53,7 +53,10 @@ export const updateProfile = async (req, res) => {
     res.json(user);
   } catch (error) {
     console.error("Update profile error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    const isImageUploadError = error.message?.startsWith('Image ');
+    res.status(isImageUploadError ? 400 : 500).json({
+      message: isImageUploadError ? error.message : "Unable to update profile. Please try again.",
+    });
   }
 };
 

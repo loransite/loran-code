@@ -1,9 +1,12 @@
 import express from "express";
 import multer from "multer";
+import fs from "fs";
 import userController from "../controller/usercontroller.js";
 import { protect } from "../middleware/authmiddleware.js";
 
 const router = express.Router();
+const uploadsDirectory = "uploads/";
+fs.mkdirSync(uploadsDirectory, { recursive: true });
 
 // Configure multer for profile pictures
 const storage = multer.diskStorage({
@@ -37,7 +40,14 @@ router.get("/profile", protect, userController.getProfile);
 router.put(
   "/profile",
   protect,
-  upload.single("profilePicture"),
+  (req, res, next) => {
+    upload.single("profilePicture")(req, res, (error) => {
+      if (error) {
+        return res.status(400).json({ message: error.message || 'Invalid profile image.' });
+      }
+      next();
+    });
+  },
   userController.updateProfile
 );
 

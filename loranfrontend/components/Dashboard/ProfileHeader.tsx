@@ -7,8 +7,15 @@ import axios from "axios";
 import { useAuth } from "@/lib/AuthContext";
 
 interface ProfileHeaderProps {
-  role: "client" | "designer";
+  role: "client" | "designer" | "admin";
 }
+
+const getProfileImageUrl = (value?: string | null) => {
+  if (!value) return null;
+  if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  const path = value.startsWith('/') ? value : `/${value}`;
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL}${path}`;
+};
 
 export default function ProfileHeader({ role }: ProfileHeaderProps) {
   const [uploading, setUploading] = useState(false);
@@ -17,7 +24,7 @@ export default function ProfileHeader({ role }: ProfileHeaderProps) {
 
   useEffect(() => {
     if (user?.profilePicture) {
-      setPreviewUrl(`${process.env.NEXT_PUBLIC_BACKEND_URL}/${user.profilePicture}`);
+      setPreviewUrl(getProfileImageUrl(user.profilePicture));
     }
   }, [user]);
 
@@ -60,7 +67,7 @@ export default function ProfileHeader({ role }: ProfileHeaderProps) {
       alert(err.response?.data?.message || "Failed to upload picture");
       // Revert preview on error
       if (user?.profilePicture) {
-        setPreviewUrl(`${process.env.NEXT_PUBLIC_BACKEND_URL}/${user.profilePicture}`);
+        setPreviewUrl(getProfileImageUrl(user.profilePicture));
       } else {
         setPreviewUrl(null);
       }

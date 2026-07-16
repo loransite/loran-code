@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { orderAPI } from '@/lib/api';
 import { Order } from '@/app/types';
+import ProfileHeader from '@/components/Dashboard/ProfileHeader';
 import { 
   ShoppingBag, 
   Users, 
@@ -227,6 +228,8 @@ export default function AdminDashboard() {
       </div>
 
       <div className="relative z-10 p-8">
+        <ProfileHeader role="admin" />
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

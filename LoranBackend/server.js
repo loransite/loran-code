@@ -69,7 +69,10 @@ app.use(helmet({
 }));
 
 // 2. CORS Configuration
-// Support comma-separated FRONTEND_URLS or single FRONTEND_URL
+// Support comma-separated FRONTEND_URLS or single FRONTEND_URL. Keep the
+// production Loran domains in the allow list as a safe fallback so a missing
+// Render environment variable cannot take the public site offline.
+const productionOrigins = ["https://loran.com.ng", "https://www.loran.com.ng"];
 const frontendUrlsEnv = process.env.FRONTEND_URLS || process.env.FRONTEND_URL || "";
 const configuredOrigins = frontendUrlsEnv
   .split(",")
@@ -77,13 +80,12 @@ const configuredOrigins = frontendUrlsEnv
   .filter(Boolean);
 
 const devOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
-const allowedOrigins = process.env.NODE_ENV === "production" ? configuredOrigins : devOrigins;
+const allowedOrigins = process.env.NODE_ENV === "production"
+  ? [...new Set([...productionOrigins, ...configuredOrigins])]
+  : devOrigins;
 
 if (process.env.NODE_ENV === "production") {
   console.log("✅ CORS allowed origins:", allowedOrigins);
-  if (allowedOrigins.length === 0) {
-    console.warn("⚠️ No FRONTEND_URL(S) configured. Set FRONTEND_URL or FRONTEND_URLS in environment.");
-  }
 }
 
 const vercelProjectSlug = process.env.VERCEL_PROJECT_SLUG || 'loran-code';

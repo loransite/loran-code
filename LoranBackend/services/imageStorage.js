@@ -79,7 +79,11 @@ export const storeUploadedImage = async (file, { folder, localUrl }) => {
     return result.secure_url;
   } catch (error) {
     await fs.unlink(file.path).catch(() => undefined);
-    console.error('Cloudinary image upload failed:', error.message);
-    throw new Error('Image upload failed. Check the Cloudinary credentials and try again.');
+    // Cloudinary's own rejection reason (e.g. "Invalid API key", "Invalid
+    // Signature") is safe to surface — it never includes the secret itself —
+    // and is the fastest way to pinpoint a credential mistake.
+    const reason = error?.error?.message || error?.message || 'Unknown error';
+    console.error('Cloudinary image upload failed:', reason);
+    throw new Error(`Image upload failed: ${reason}`);
   }
 };

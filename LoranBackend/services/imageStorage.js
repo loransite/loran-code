@@ -1,23 +1,45 @@
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs/promises';
 
-const hasCloudinaryConfig = () => Boolean(
-  process.env.CLOUDINARY_CLOUD_NAME
-  && process.env.CLOUDINARY_API_KEY
-  && process.env.CLOUDINARY_API_SECRET
-);
+const getCloudinaryConfig = () => ({
+  cloudName: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
+  apiKey: process.env.CLOUDINARY_API_KEY?.trim(),
+  apiSecret: process.env.CLOUDINARY_API_SECRET?.trim(),
+  url: process.env.CLOUDINARY_URL?.trim(),
+});
 
-const hasPartialCloudinaryConfig = () => Boolean(
-  process.env.CLOUDINARY_CLOUD_NAME
-  || process.env.CLOUDINARY_API_KEY
-  || process.env.CLOUDINARY_API_SECRET
-);
+const getMissingCloudinaryVariables = () => {
+  const { cloudName, apiKey, apiSecret, url } = getCloudinaryConfig();
+  if (url) return [];
+
+  return [
+    !cloudName && 'CLOUDINARY_CLOUD_NAME',
+    !apiKey && 'CLOUDINARY_API_KEY',
+    !apiSecret && 'CLOUDINARY_API_SECRET',
+  ].filter(Boolean);
+};
 
 const configureCloudinary = () => {
+  const { cloudName, apiKey, apiSecret, url } = getCloudinaryConfig();
+  if (url) {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.protocol !== 'cloudinary:' || !parsedUrl.hostname || !parsedUrl.username || !parsedUrl.password) {
+      throw new Error('CLOUDINARY_URL must use the format cloudinary://API_KEY:API_SECRET@CLOUD_NAME.');
+    }
+
+    cloudinary.config({
+      cloud_name: parsedUrl.hostname,
+      api_key: decodeURIComponent(parsedUrl.username),
+      api_secret: decodeURIComponent(parsedUrl.password),
+      secure: true,
+    });
+    return;
+  }
+
   cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
     secure: true,
   });
 };
@@ -30,9 +52,11 @@ const configureCloudinary = () => {
 export const storeUploadedImage = async (file, { folder, localUrl }) => {
   if (!file) return null;
 
-  if (!hasCloudinaryConfig()) {
-    if (hasPartialCloudinaryConfig()) {
-      throw new Error('Image storage is misconfigured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.');
+  const missingVariables = getMissingCloudinaryVariables();
+  if (missingVariables.length > 0) {
+    const hasAnyCloudinaryVariable = Object.values(getCloudinaryConfig()).some(Boolean);
+    if (hasAnyCloudinaryVariable) {
+      throw new Error(`Image storage is missing: ${missingVariables.join(', ')}. Add the missing value in the Render backend environment.`);
     }
 
     if (process.env.NODE_ENV === 'production') {

@@ -20,6 +20,13 @@ const createTransporter = () => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    // Without explicit timeouts, a blocked/slow SMTP connection can hang the
+    // whole signup request for minutes (Nodemailer's defaults are very long).
+    // Failing fast here lets signup still succeed even if email delivery
+    // can't complete, since the caller already treats email as best-effort.
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   });
 };
 

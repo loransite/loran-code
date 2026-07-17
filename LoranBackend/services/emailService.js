@@ -30,21 +30,27 @@ const createTransporter = () => {
   });
 };
 
-const getVerificationUrl = (token) => {
-  const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
-  if (!frontendUrl) {
+// FRONTEND_URL is sometimes set to a comma-separated list on Render (mirroring
+// the FRONTEND_URLS convention used for CORS), which previously produced a
+// broken concatenated link like "https://a.com,https://b.com/reset-password/...".
+// Always resolve to a single, valid base URL.
+const getFrontendBaseUrl = () => {
+  const raw = process.env.FRONTEND_URL || '';
+  const firstUrl = raw.split(',').map((u) => u.trim()).filter(Boolean)[0];
+  if (!firstUrl) {
     throw new Error('FRONTEND_URL is not configured');
   }
 
+  return firstUrl.replace(/\/$/, '');
+};
+
+const getVerificationUrl = (token) => {
+  const frontendUrl = getFrontendBaseUrl();
   return `${frontendUrl}/verify-email/${token}`;
 };
 
 const getPasswordResetUrl = (token) => {
-  const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
-  if (!frontendUrl) {
-    throw new Error('FRONTEND_URL is not configured');
-  }
-
+  const frontendUrl = getFrontendBaseUrl();
   return `${frontendUrl}/reset-password/${token}`;
 };
 
@@ -206,8 +212,11 @@ export const sendVerificationEmail = async (email, fullName, token) => {
     console.log(`✅ Verification email sent to ${email}`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
+    // Surface Nodemailer/SMTP's own rejection reason (e.g. "Invalid login",
+    // "self-signed certificate") — it never includes the password itself —
+    // so a misconfigured EMAIL_USER/EMAIL_PASS can be diagnosed directly.
     console.error('❌ Error sending verification email:', error);
-    throw new Error('Failed to send verification email');
+    throw new Error(`Failed to send verification email: ${error.message}`);
   }
 };
 
@@ -348,7 +357,7 @@ export const sendPasswordResetEmail = async (email, fullName, token) => {
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('❌ Error sending password reset email:', error);
-    throw new Error('Failed to send password reset email');
+    throw new Error(`Failed to send password reset email: ${error.message}`);
   }
 };
 
@@ -683,7 +692,7 @@ export const resendVerificationEmail = async (email, fullName, token) => {
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('❌ Error resending verification email:', error);
-    throw new Error('Failed to resend verification email');
+    throw new Error(`Failed to resend verification email: ${error.message}`);
   }
 };
 

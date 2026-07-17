@@ -433,19 +433,26 @@ export const forgotPassword = async (req, res) => {
     } catch (mailErr) {
       console.error('[AUTH] Error sending reset email:', mailErr.message);
 
-      // Never expose the reset token/link in a production response — that
-      // would let anyone reset any account's password without owning the
-      // mailbox. Only surface it as a local development convenience.
-      if (process.env.NODE_ENV !== 'production') {
-        const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+      // Render does not reliably report NODE_ENV=production, so that check
+      // cannot be trusted to hide the reset token/link. Require an explicit
+      // opt-in instead — this flag should only ever be set in local/dev envs.
+      if (process.env.ALLOW_DEV_RESET_TOKEN_IN_RESPONSE === 'true') {
+        const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim().replace(/\/$/, '');
         return res.json({
           message: 'Reset token generated (email failed)',
+          reason: mailErr.message,
           resetToken,
           resetUrl: `${frontendUrl}/reset-password/${resetToken}`,
         });
       }
 
-      return res.status(502).json({ message: 'Unable to send reset email right now. Please try again later.' });
+      // The reason (e.g. "Invalid login", "FRONTEND_URL is not configured")
+      // is safe to return — it never includes credentials — and is the
+      // fastest way to diagnose a misconfigured mailer without server access.
+      return res.status(502).json({
+        message: 'Unable to send reset email right now. Please try again later.',
+        reason: mailErr.message,
+      });
     }
   } catch (err) {
     console.error('[AUTH] Forgot password error:', err);
@@ -655,7 +662,10 @@ export const resendVerification = async (req, res) => {
       console.log(`📧 Verification email resent to ${user.email}`);
     } catch (emailError) {
       console.error('❌ Failed to resend verification email:', emailError);
-      return res.status(500).json({ message: 'Failed to send verification email' });
+      // The reason (e.g. "Invalid login", "FRONTEND_URL is not configured")
+      // is safe to return — it never includes credentials — and is the
+      // fastest way to diagnose a misconfigured mailer without server access.
+      return res.status(502).json({ message: 'Failed to send verification email', reason: emailError.message });
     }
 
     res.status(200).json({ 

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import axios from 'axios';
 import crypto from 'crypto';
 
 // Create transporter
@@ -8,16 +9,49 @@ const createTransporter = () => {
     return null;
   }
 
-  // Check if email is configured
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const hasSmtpCredentials = process.env.EMAIL_USER && process.env.EMAIL_PASS;
+
+  if (!resendApiKey && !hasSmtpCredentials) {
     console.warn('⚠️  Email service not configured. Emails will be skipped.');
     return null;
+  }
+
+  if (resendApiKey) {
+    // Hosts like Render block outbound SMTP (ports 25/465/587), which made
+    // every verification/reset email time out even with correct SMTP
+    // credentials. Resend's HTTPS API (port 443) is never blocked. This
+    // object exposes the same .sendMail(...) shape nodemailer uses, so every
+    // caller below keeps working unmodified.
+    return {
+      sendMail: async (mailOptions) => {
+        try {
+          const response = await axios.post(
+            'https://api.resend.com/emails',
+            {
+              from: mailOptions.from,
+              to: mailOptions.to,
+              subject: mailOptions.subject,
+              html: mailOptions.html,
+            },
+            {
+              headers: { Authorization: `Bearer ${resendApiKey}` },
+              timeout: 10000,
+            }
+          );
+          return { messageId: response.data?.id };
+        } catch (error) {
+          const reason = error.response?.data?.message || error.message;
+          throw new Error(reason);
+        }
+      },
+    };
   }
 
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false, // STARTTLS on 587 — some hosts block the implicit-TLS 465 port used by the 'gmail' service shorthand
+    secure: false, // STARTTLS on 587 — kept as a fallback for hosts that do allow outbound SMTP
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -30,6 +64,17 @@ const createTransporter = () => {
     greetingTimeout: 10000,
     socketTimeout: 10000,
   });
+};
+
+// Resend requires the "from" address to be on a domain verified with Resend
+// (a Gmail address is rejected). Fall back to Resend's built-in sandbox
+// sender, which works immediately without any domain verification.
+const getFromAddress = () => {
+  if (process.env.RESEND_API_KEY) {
+    return process.env.EMAIL_FROM || 'Loran Fashion <onboarding@resend.dev>';
+  }
+
+  return `"Loran Fashion" <${process.env.EMAIL_USER}>`;
 };
 
 // FRONTEND_URL is sometimes set to a comma-separated list on Render (mirroring
@@ -86,7 +131,7 @@ export const sendVerificationEmail = async (email, fullName, token) => {
   const verificationUrl = getVerificationUrl(token);
 
   const mailOptions = {
-    from: `"Loran Fashion" <${process.env.EMAIL_USER}>`,
+    from: getFromAddress(),
     to: email,
     subject: '✨ Verify Your Loran Account',
     html: `
@@ -244,7 +289,7 @@ export const sendPasswordResetEmail = async (email, fullName, token) => {
   const resetUrl = getPasswordResetUrl(token);
 
   const mailOptions = {
-    from: `"Loran Fashion" <${process.env.EMAIL_USER}>`,
+    from: getFromAddress(),
     to: email,
     subject: '🔒 Reset Your Loran Password',
     html: `
@@ -377,7 +422,7 @@ export const sendWelcomeEmail = async (email, fullName) => {
   }
 
   const mailOptions = {
-    from: `"Loran Fashion" <${process.env.EMAIL_USER}>`,
+    from: getFromAddress(),
     to: email,
     subject: '🎉 Welcome to Loran - Your Account is Verified!',
     html: `
@@ -518,7 +563,7 @@ export const sendDesignerApprovalEmail = async (email, fullName) => {
   const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/designer`;
 
   const mailOptions = {
-    from: `"Loran Fashion" <${process.env.EMAIL_USER}>`,
+    from: getFromAddress(),
     to: email,
     subject: '🎉 Congratulations! Your Designer Account Has Been Approved',
     html: `
@@ -585,7 +630,7 @@ export const resendVerificationEmail = async (email, fullName, token) => {
   const verificationUrl = getVerificationUrl(token);
 
   const mailOptions = {
-    from: `"Loran Fashion" <${process.env.EMAIL_USER}>`,
+    from: getFromAddress(),
     to: email,
     subject: '🔄 Resend: Verify Your Loran Account',
     html: `

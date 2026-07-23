@@ -23,18 +23,33 @@ export default function MeasurementStep({ onComplete, designItem }: MeasurementS
   });
 
   const handleManualSubmit = () => {
+    // Validation: Ensure at least height is provided (required for AI calculation)
+    if (!measurements.height || parseFloat(measurements.height) <= 0) {
+      alert("Please enter your height (required for proper fit)");
+      return;
+    }
+
+    // Validate that all provided values are positive numbers
+    const entries = Object.entries(measurements);
+    for (const [key, value] of entries) {
+      if (value && (parseFloat(value) <= 0 || parseFloat(value) > 300)) {
+        alert(`Please enter a valid ${key.replace(/([A-Z])/g, " $1")} (must be between 0 and 300)`);
+        return;
+      }
+    }
+
+    // Convert to numbers and filter out empty values
+    const validatedMeasurements: any = {};
+    for (const [key, value] of entries) {
+      if (value) {
+        validatedMeasurements[key] = parseFloat(value);
+      }
+    }
+
     onComplete({
       hasMeasurements: true,
       method: "manual",
-      measurements: {
-        height: parseFloat(measurements.height),
-        chest: parseFloat(measurements.chest),
-        waist: parseFloat(measurements.waist),
-        hips: parseFloat(measurements.hips),
-        shoulder: parseFloat(measurements.shoulder),
-        sleeveLength: parseFloat(measurements.sleeveLength),
-        inseam: parseFloat(measurements.inseam),
-      },
+      measurements: validatedMeasurements,
     });
   };
 

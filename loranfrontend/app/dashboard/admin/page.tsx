@@ -559,7 +559,8 @@ export default function AdminDashboard() {
                           {item.status}
                         </span>
                       </div>
-                      <p className="text-blue-400 font-bold mb-4">${item.price}</p>
+                      <p className="text-blue-400 font-bold mb-1">${item.price}</p>
+                      <p className="text-xs text-gray-400 mb-4">Category: {item.category || 'General'}</p>
                       <div className="text-xs text-gray-400 mb-4 pb-4 border-b border-white/5">
                         Uploaded by: <span className="text-gray-200">{item.uploadedBy?.fullName || 'Unknown'}</span>
                       </div>

@@ -26,7 +26,8 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
-    const message = error.response?.data?.message;
+    const data = error.response?.data;
+    const message = data?.message;
 
     // Handle rate limiting
     if (status === 429) {
@@ -39,13 +40,17 @@ apiClient.interceptors.response.use(
 
     // Handle authentication errors
     if (status === 401) {
-      const authMessage = message || 'Session expired';
+      const authMessage =
+        data?.sessionInvalidated
+          ? "For your security, we've logged you out. This happens when you change your password or we need to refresh your account. Please log in again."
+          : (message || 'Your session has ended');
+
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('user');
       sessionStorage.removeItem('availableRoles');
-      
+
       if (typeof window !== 'undefined') {
-        alert(`${authMessage}. Please log in again.`);
+        alert(authMessage);
         window.location.href = '/login';
       }
     }
@@ -53,7 +58,20 @@ apiClient.interceptors.response.use(
     // Handle authorization errors (role/session mismatch)
     if (status === 403) {
       if (typeof window !== 'undefined') {
-        alert(message || 'Access denied for this action.');
+        if (data?.emailVerificationRequired) {
+          alert(
+            "Before you can do this, please confirm your email address. " +
+            "We sent a confirmation link when you signed up — check your inbox (and spam). " +
+            "You can also use the banner at the top of the page to resend it."
+          );
+        } else if (data?.designerAccessPaused) {
+          alert(
+            "Your designer access is currently paused by our team. " +
+            "You can keep using Loran as a client, and we'll let you know as soon as it's active again."
+          );
+        } else {
+          alert(message || 'You don\'t have permission to do this right now.');
+        }
       }
       return Promise.reject(error);
     }
@@ -61,7 +79,7 @@ apiClient.interceptors.response.use(
     // Handle server errors
     if (status >= 500) {
       if (typeof window !== 'undefined') {
-        alert('Server error. Please try again later.');
+        alert('Something went wrong on our side. Please try again in a moment.');
       }
     }
 

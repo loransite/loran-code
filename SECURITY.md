@@ -31,6 +31,16 @@
 - Regex-based email format validation
 - Case-insensitive email storage
 
+### 6. **Email Verification Enforced** ✓
+- Tokens issued on signup (24h, single-use)
+- Unverified accounts are blocked from placing orders, AI Try-On, and becoming a designer
+- A persistent banner prompts unverified users to confirm their email
+
+### 7. **Session Invalidation** ✓
+- Each account has a `tokenVersion` embedded in its JWT
+- Changing your password (or an admin revoking designer access) bumps it, instantly logging out every old session
+- Designer access is re-checked on every designer action, so a paused/rejected application loses privileges immediately
+
 ### 6. **File Upload Security** ✓
 - **Size limit**: 10MB per file
 - **Allowed types**: JPEG, JPG, PNG, WEBP only
@@ -170,11 +180,7 @@ npm install @sentry/node @sentry/tracing
 ## 🔧 Additional Recommended Fixes
 
 ### High Priority (Not Yet Implemented):
-1. **Email Verification**
-   - Add email verification on signup
-   - Prevent unverified users from certain actions
-
-2. **Two-Factor Authentication (2FA)**
+1. **Two-Factor Authentication (2FA)**
    - Add optional 2FA for sensitive accounts
    - SMS or authenticator app support
 
@@ -235,7 +241,6 @@ If you detect suspicious activity:
 - ✅ Security headers enabled
 
 **Still Needed for 100/100:**
-- ⚠️ Email verification
 - ⚠️ 2FA implementation
 - ⚠️ Comprehensive testing
 - ⚠️ Audit logging system

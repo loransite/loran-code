@@ -47,7 +47,18 @@ router.get('/', async (req, res) => {
     if (sort === 'name-desc') sortOption = { title: -1 };
     
     const items = await Catalogue.find(query).sort(sortOption);
-    res.json(items);
+    // Catalogue documents historically store the file path as `image`, while
+    // the frontend API contract uses `imageUrl`. Return one consistent field
+    // so uploads from every dashboard flow can be displayed.
+    const normalizedItems = items.map((item) => {
+      const catalogueItem = item.toObject();
+      return {
+        ...catalogueItem,
+        imageUrl: catalogueItem.imageUrl || catalogueItem.image,
+      };
+    });
+
+    res.json(normalizedItems);
   } catch (error) {
     console.error('[CATALOGUE] Fetch error:', error);
     res.status(500).json({ message: 'Failed to load catalogue' });

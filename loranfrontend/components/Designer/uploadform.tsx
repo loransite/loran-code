@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Dispatch, SetStateAction } from 'react';
-import axios from 'axios';
 
 interface UploadFormProps {
   file: File | null;
@@ -16,6 +15,7 @@ interface UploadFormProps {
   setCategory: Dispatch<SetStateAction<string>>;
   setUploading: Dispatch<SetStateAction<boolean>>;
   onUpload: () => void;
+  categories?: string[];
 }
 
 export const UploadForm: React.FC<UploadFormProps> = ({
@@ -31,8 +31,16 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   setCategory,
   setUploading,
   onUpload,
+  categories = [],
 }) => {
-  const handleSubmit = async (e: React.FormEvent) => {
+  const defaultCategories = ['dress', 'shirt', 'suit', 'general'];
+  const availableCategories = Array.from(new Set([...defaultCategories, ...categories]));
+  // This form only validates and delegates to the parent's onUpload, which
+  // already performs the POST request, success alert, list refresh, and
+  // field reset. Previously this handler ALSO sent its own POST request
+  // before calling onUpload(), so every submission created two identical
+  // catalogue entries — the reported "product shows twice" bug.
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!file || !title || !price || !description || !category) {
@@ -40,44 +48,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
       return;
     }
 
-    const token = sessionStorage.getItem('token');
-    if (!token) {
-      alert('You must be logged in to upload');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('title', title);
-    formData.append('price', price);
-    formData.append('description', description);
-    formData.append('category', category);
-
-    try {
-      setUploading(true);
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/designs`, // Correct URL
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      onUpload();
-      setFile(null);
-      setTitle('');
-      setPrice('');
-      setDescription('');
-      setCategory('');
-    } catch (err) {
-      console.error(err);
-      alert('Upload failed');
-    } finally {
-      setUploading(false);
-    }
+    onUpload();
   };
 
   return (
@@ -88,9 +59,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({
       <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} required />
       <select value={category} onChange={(e) => setCategory(e.target.value)} required>
         <option value="">Select Category</option>
-        <option value="dress">Dress</option>
-        <option value="shirt">Shirt</option>
-        <option value="suit">Suit</option>
+        {availableCategories.map((cat) => (
+          <option key={cat} value={cat}>{cat}</option>
+        ))}
       </select>
       <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
         Upload Design

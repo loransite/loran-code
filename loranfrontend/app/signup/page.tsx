@@ -4,6 +4,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { motion, Variants } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 import { apiClient } from "@/lib/api";
 
 export default function SignupPage() {
@@ -28,9 +29,11 @@ export default function SignupPage() {
     bio: "",
   });
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -51,8 +54,19 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
+
+    if (form.roles.length === 0) {
+      setError("Please select at least one role (client or designer)");
+      return;
+    }
+
+    if (form.password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const fd = new FormData();
@@ -192,7 +206,8 @@ export default function SignupPage() {
             value={form.password}
             onChange={handleChange}
             required
-            className="w-full p-3 pr-20 transition-all rounded-lg relative z-10"
+            minLength={8}
+            className="w-full p-3 pr-12 transition-all rounded-lg relative z-10"
             style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text)", outline: "none" }}
             variants={inputVariants}
             initial="initial"
@@ -201,12 +216,42 @@ export default function SignupPage() {
           <button
             type="button"
             onClick={() => setShowPassword(v => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold px-3 py-1 rounded transition-all"
-            style={{ color: "var(--muted)", background: "var(--surface)" }}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center transition-all"
+            style={{ color: "var(--muted)" }}
           >
-            {showPassword ? "Hide" : "Show"}
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
+
+        <div className="relative">
+          <motion.input
+            type={showConfirmPassword ? "text" : "password"}
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            minLength={8}
+            className="w-full p-3 pr-12 transition-all rounded-lg relative z-10"
+            style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text)", outline: "none" }}
+            variants={inputVariants}
+            initial="initial"
+            whileFocus="focus"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(v => !v)}
+            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center transition-all"
+            style={{ color: "var(--muted)" }}
+          >
+            {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+        </div>
+        {confirmPassword && form.password !== confirmPassword && (
+          <p className="text-xs" style={{ color: "#F87171" }}>Passwords do not match</p>
+        )}
 
         {/* Role Selection - Multi-select */}
         <div className="space-y-2">

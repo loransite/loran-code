@@ -96,6 +96,7 @@ router.post("/designer", protect, authorizeRoles("designer"), upload.single("fil
       title,
       description,
       price: Number(price) || 0,
+      category: category || 'general',
       image: imageUrl,
       designer: { id: req.user.id, name: user?.fullName || "Unknown" },
     });
@@ -136,6 +137,7 @@ router.post("/", protect, authorizeRoles("designer"), upload.single("file"), asy
       title,
       description,
       price: Number(price) || 0,
+      category: category || 'general',
       image: imageUrl,
       designer: { id: req.user.id, name: user?.fullName || "Unknown" },
       uploadedBy: req.user.id,

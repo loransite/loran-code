@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
       id: d._id,
       name: d.fullName,
       joinedAt: d.createdAt,
-      avatarUrl: d.avatarUrl || d.profilePicture || null,
+      avatarUrl: d.profilePicture || d.avatarUrl || null,
     }));
     res.json(result);
   } catch (err) {
@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const designerId = req.params.id;
-    const user = await User.findById(designerId).select('_id fullName createdAt bio avatarUrl rating');
+    const user = await User.findById(designerId).select('_id fullName createdAt bio avatarUrl profilePicture rating');
     if (!user) return res.status(404).json({ message: 'Designer not found' });
 
     // Fetch catalogue uploads (robust: either stored by designer.id or uploadedBy)
@@ -67,7 +67,7 @@ router.get('/:id', async (req, res) => {
       id: user._id,
       name: user.fullName,
       bio: user.bio || null,
-      avatarUrl: user.avatarUrl || null,
+      avatarUrl: user.profilePicture || user.avatarUrl || null,
       joinedAt: user.createdAt,
       yearsExperience,
       rating,

@@ -5,19 +5,34 @@ import { motion } from "framer-motion";
 import { Sparkles, Send } from "lucide-react";
 
 type CustomizationStepProps = {
-  onComplete: (data: { customizationRequest: string; clientNotes: string }) => void;
+  onComplete: (data: { customizationRequest: string; clientNotes: string; shipping?: any }) => void;
   onBack: () => void;
 };
 
 export default function CustomizationStep({ onComplete, onBack }: CustomizationStepProps) {
   const [customization, setCustomization] = useState("");
   const [notes, setNotes] = useState("");
+  const [shipping, setShipping] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    country: "Nigeria",
+  });
 
   const handleSubmit = () => {
     if (customization.trim()) {
+      // Validate shipping details
+      if (!shipping.name || !shipping.phone || !shipping.address || !shipping.city) {
+        alert("Please fill in all required shipping details");
+        return;
+      }
+
       onComplete({
         customizationRequest: customization,
         clientNotes: notes,
+        shipping,
       });
     }
   };
@@ -67,6 +82,78 @@ export default function CustomizationStep({ onComplete, onBack }: CustomizationS
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
               placeholder="Any other details you'd like to share with the designer..."
             />
+          </div>
+
+          {/* Shipping Details */}
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Shipping Details *</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                <input
+                  type="text"
+                  value={shipping.name}
+                  onChange={(e) => setShipping({ ...shipping, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Your full name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                <input
+                  type="tel"
+                  value={shipping.phone}
+                  onChange={(e) => setShipping({ ...shipping, phone: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="e.g., +234 800 000 0000"
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Street Address *</label>
+                <input
+                  type="text"
+                  value={shipping.address}
+                  onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Your street address"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                <input
+                  type="text"
+                  value={shipping.city}
+                  onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="e.g., Lagos"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code (Optional)</label>
+                <input
+                  type="text"
+                  value={shipping.postalCode}
+                  onChange={(e) => setShipping({ ...shipping, postalCode: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="e.g., 100001"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
+                <input
+                  type="text"
+                  value={shipping.country}
+                  onChange={(e) => setShipping({ ...shipping, country: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="e.g., Nigeria"
+                  required
+                />
+              </div>
+            </div>
           </div>
 
           {/* Info Box */}

@@ -64,6 +64,8 @@ export const approveDesigner = async (req, res) => {
       return res.json({ message: "Designer approved successfully", user });
     } else {
       user.designerStatus = 'rejected';
+      // Force any active designer sessions/tokens for this user to expire.
+      user.tokenVersion = (user.tokenVersion || 0) + 1;
       await user.save();
       return res.json({ message: "Designer application rejected", user });
     }
@@ -226,10 +228,15 @@ export const getAnalytics = async (req, res) => {
       .map(o => ({
         id: o._id,
         client: o.userId?.fullName || 'N/A',
+        clientEmail: o.userId?.email || 'N/A',
         total: o.total,
         status: o.status,
         paymentStatus: o.paymentStatus,
         createdAt: o.createdAt,
+        measurements: o.measurements || null,
+        measurementMethod: o.measurementMethod || null,
+        designer: o.designerId?.fullName || 'N/A',
+        customizationRequest: o.customizationRequest || null,
       }));
 
     // ── Payment status breakdown ──────────────────────────────────────────────
@@ -242,6 +249,47 @@ export const getAnalytics = async (req, res) => {
     // ── New signups this month ────────────────────────────────────────────────
     const newUsersThisMonth = allUsers.filter(u => new Date(u.createdAt) >= startOf30Days).length;
     const newOrdersThisMonth = allOrders.filter(o => new Date(o.createdAt) >= startOf30Days).length;
+
+    // ── Recent client registrations (last 10) ─────────────────────────────────
+    const recentClients = [...allUsers]
+      .filter(u => u.roles?.includes('client'))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 10)
+      .map(u => ({
+        id: u._id,
+        fullName: u.fullName,
+        email: u.email,
+        phone: u.phone || null,
+        city: u.city || null,
+        createdAt: u.createdAt,
+        isEmailVerified: u.isEmailVerified || false,
+        measurementHistory: u.measurementHistory?.length || 0,
+      }));
+
+    // ── Pending designers for verification ─────────────────────────────────────
+    const pendingDesignersList = allUsers
+      .filter(u => u.designerStatus === 'pending')
+      .map(u => ({
+        id: u._id,
+        fullName: u.fullName,
+        email: u.email,
+        phone: u.phone || null,
+        brandName: u.brandName || null,
+        city: u.city || null,
+        createdAt: u.createdAt,
+        isEmailVerified: u.isEmailVerified || false,
+      }));
+
+    // ── Measurement statistics ─────────────────────────────────────────────────
+    const ordersWithMeasurements = allOrders.filter(o => o.measurements && Object.keys(o.measurements).length > 0);
+    const measurementStats = {
+      totalOrdersWithMeasurements: ordersWithMeasurements.length,
+      manualMeasurements: ordersWithMeasurements.filter(o => o.measurementMethod === 'manual').length,
+      aiMeasurements: ordersWithMeasurements.filter(o => o.measurementMethod === 'ai').length,
+      averageHeight: ordersWithMeasurements.length > 0 
+        ? ordersWithMeasurements.reduce((sum, o) => sum + (o.measurements?.height || 0), 0) / ordersWithMeasurements.length 
+        : 0,
+    };
 
     res.json({
       summary: {
@@ -263,6 +311,9 @@ export const getAnalytics = async (req, res) => {
       topDesigners,
       catalogueByStatus,
       recentOrders,
+      recentClients,
+      pendingDesignersList,
+      measurementStats,
     });
   } catch (err) {
     console.error('Analytics error:', err);

@@ -43,7 +43,8 @@ const generateToken = (user, activeRole) => {
       id: user._id, 
       roles: user.roles || [user.role], // All roles user has
       role: activeRole, // Currently active role for this session
-      email: user.email 
+      email: user.email,
+      tokenVersion: user.tokenVersion || 0 // Invalidates token after reset/revoke
     }, 
     process.env.JWT_SECRET, 
     { expiresIn: "30d" } // Extended to 30 days
@@ -62,6 +63,7 @@ const formatUserResponse = (user) => ({
   bio: user.bio || null,
   rating: user.rating || 0,
   designerStatus: user.designerStatus || 'none',
+  isEmailVerified: !!user.isEmailVerified,
 });
 
 export const signup = async (req, res) => {
@@ -113,17 +115,6 @@ export const signup = async (req, res) => {
     // Block any attempt to signup as admin
     if (userRoles.includes('admin')) {
       return res.status(403).json({ message: "Admin accounts cannot be created through signup. Contact system administrator." });
-    }
-
-    // Password strength check
-    if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters long" });
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: "Invalid email format" });
     }
 
     // Check if user exists
@@ -468,9 +459,10 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Token and new password are required' });
     }
 
-    // Password strength check
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    // Enforce the same password rules as signup so a reset can't weaken security.
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({ message: passwordValidation.errors });
     }
 
     // Hash the token to compare with DB
@@ -489,6 +481,8 @@ export const resetPassword = async (req, res) => {
     user.password = await bcrypt.hash(newPassword, 12);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpiry = undefined;
+    // Invalidate every existing session/token for this account.
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
     await user.save();
 
     console.log(`[AUTH] Password reset successful for: ${user.email}`);

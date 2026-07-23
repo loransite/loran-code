@@ -1,15 +1,42 @@
 import Order from "../model/order.js";
 import Catalogue from "../model/catalogue.js";
-import { sendEmail } from "../services/emailService.js";
+import User from "../model/user.js";
+import {
+  sendDesignerNewOrderEmail,
+  sendAdminNewOrderEmail,
+  sendClientOrderConfirmationEmail,
+  sendOrderStatusUpdateEmail,
+} from "../services/emailService.js";
 
 // Client: create an order for a catalogue item
 export const createOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { catalogueId, total, measurements, measurementMethod, shipping } = req.body;
+    const { catalogueId, total, measurements, measurementMethod, shipping, customizationRequest, clientNotes } = req.body;
 
     if (!catalogueId || !total) {
       return res.status(400).json({ message: "catalogueId and total are required" });
+    }
+
+    // Validate measurements if provided
+    if (measurements) {
+      if (measurements.height && (measurements.height <= 0 || measurements.height > 300)) {
+        return res.status(400).json({ message: "Invalid height value. Must be between 0 and 300." });
+      }
+      // Validate other measurement fields
+      const measurementFields = ['chest', 'waist', 'hips', 'shoulder', 'sleeveLength', 'inseam'];
+      for (const field of measurementFields) {
+        if (measurements[field] && (measurements[field] <= 0 || measurements[field] > 300)) {
+          return res.status(400).json({ message: `Invalid ${field} value. Must be between 0 and 300.` });
+        }
+      }
+    }
+
+    // Validate shipping if provided
+    if (shipping) {
+      if (!shipping.name || !shipping.phone || !shipping.address || !shipping.city || !shipping.country) {
+        return res.status(400).json({ message: "Shipping details are incomplete. Name, phone, address, city, and country are required." });
+      }
     }
 
     // Lookup catalogue to get designer info
@@ -29,14 +56,94 @@ export const createOrder = async (req, res) => {
     if (measurements) {
       orderData.measurements = measurements;
       orderData.measurementMethod = measurementMethod || null;
+      orderData.hasMeasurements = true;
     }
     if (shipping) {
       orderData.shipping = shipping;
     }
+    if (customizationRequest) orderData.customizationRequest = customizationRequest;
+    if (clientNotes) orderData.clientNotes = clientNotes;
 
     const order = await Order.create(orderData);
 
-    res.status(201).json({ message: "Order created", order });
+    // Save measurements to user history if provided
+    if (measurements && measurementMethod) {
+      try {
+        const user = await User.findById(userId);
+        if (user) {
+          if (!user.measurementHistory) {
+            user.measurementHistory = [];
+          }
+          user.measurementHistory.push({
+            date: new Date(),
+            method: measurementMethod,
+            measurements: measurements,
+            aiData: measurementMethod === 'ai' ? { source: 'order_creation' } : {}
+          });
+          // Update current height if provided
+          if (measurements.height) {
+            user.height = measurements.height;
+          }
+          await user.save();
+        }
+      } catch (saveError) {
+        console.error('Error saving measurement history:', saveError);
+        // Don't fail the order creation if measurement history save fails
+      }
+    }
+
+    // ── Notify all parties (designer, admin, client) of the new pending order ──
+    // Best-effort: never let a mail failure break the order creation.
+    const client = await User.findById(userId).select('fullName email');
+    const designer = order.designerId ? await User.findById(order.designerId).select('fullName email') : null;
+
+    const orderDetails = {
+      orderId: order._id,
+      designName: catalogueItem.title,
+      amount: order.total,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      measurements: order.measurements,
+      measurementMethod: order.measurementMethod,
+      shipping: order.shipping,
+      customizationRequest: order.customizationRequest,
+      clientNotes: order.clientNotes,
+      customerName: client?.fullName || 'Client',
+      customerEmail: client?.email || '',
+      designerName: designer?.fullName || 'Unassigned',
+      currency: process.env.CURRENCY_SYMBOL || '₦',
+    };
+
+    const notified = { admin: false, designer: false };
+
+    if (designer?.email) {
+      const result = await sendDesignerNewOrderEmail(designer.email, designer.fullName, orderDetails);
+      notified.designer = !!result.success;
+    }
+
+    let adminEmails = [];
+    if (process.env.ADMIN_EMAIL) {
+      adminEmails = process.env.ADMIN_EMAIL.split(',').map((e) => e.trim()).filter(Boolean);
+    } else {
+      const admins = await User.find({ roles: 'admin' }).select('email');
+      adminEmails = admins.map((a) => a.email).filter(Boolean);
+    }
+    for (const adminEmail of adminEmails) {
+      const result = await sendAdminNewOrderEmail(adminEmail, orderDetails);
+      if (result.success) notified.admin = true;
+    }
+
+    if (client?.email) {
+      await sendClientOrderConfirmationEmail(client.email, client.fullName, orderDetails);
+    }
+
+    order.notified = notified;
+    await order.save();
+
+    res.status(201).json({
+      message: "Your order has been placed. The designer and our team have been notified.",
+      order,
+    });
   } catch (err) {
     console.error("Create order error:", err);
     res.status(500).json({ message: "Server error" });
@@ -106,16 +213,17 @@ export const updateOrderStatus = async (req, res) => {
     
     // Send status update notification to client
     if (order.userId?.email) {
-      await sendEmail({
-        to: order.userId.email,
-        template: 'orderStatusUpdate',
-        data: {
-          customerName: order.userId.fullName,
-          orderId: order._id,
-          status: order.status,
-          designerNotes: order.designerNotes,
-          message: getStatusMessage(order.status),
-        },
+      await sendOrderStatusUpdateEmail(order.userId.email, order.userId.fullName, {
+        orderId: order._id,
+        designName: order.catalogueId?.title || 'Custom Design',
+        amount: order.total,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        measurements: order.measurements,
+        customizationRequest: order.customizationRequest,
+        designerNotes: order.designerNotes,
+        message: getStatusMessage(order.status),
+        currency: process.env.CURRENCY_SYMBOL || '₦',
       }).catch(err => console.error('Email notification error:', err));
     }
     

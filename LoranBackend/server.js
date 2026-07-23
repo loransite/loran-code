@@ -140,19 +140,7 @@ const globalLimiter = rateLimit({
   }
 });
 
-// 4. Rate Limiting - Auth Routes (Stricter)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Only 5 attempts per 15 minutes
-  skipSuccessfulRequests: true, // Don't count successful logins
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    res.status(429).json({ message: 'Too many authentication attempts, please try again later.' });
-  }
-});
-
-// 5. Rate Limiting - AI Routes (Very Strict)
+// 4. Rate Limiting - AI Routes (Very Strict)
 const aiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10, // Only 10 AI requests per hour

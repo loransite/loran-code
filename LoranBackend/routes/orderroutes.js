@@ -2,13 +2,15 @@
 import express from "express";
 import { protect } from "../middleware/authmiddleware.js";
 import { authorizeRoles } from "../middleware/rolemiddleware.js";
+import { requireEmailVerification } from "../middleware/emailVerification.js";
 import { createOrder, getClientOrders, getDesignerOrders, updateOrderStatus } from "../controller/ordercontroller.js";
 import { getAllOrders, deleteOrder } from "../controller/ordercontroller.js";
 
 const router = express.Router();
 
 // Create an order (allow clients, designers, and admins to create orders)
-router.post("/", protect, authorizeRoles("client", "designer", "admin"), createOrder);
+// Requires a verified email so only confirmed accounts can place orders.
+router.post("/", protect, requireEmailVerification, authorizeRoles("client", "designer", "admin"), createOrder);
 
 // Client: delete an order (remove from cart)
 router.delete("/:id", protect, authorizeRoles("client"), deleteOrder);

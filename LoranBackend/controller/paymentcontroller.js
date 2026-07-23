@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import Order from '../model/order.js';
 import User from '../model/user.js';
 import Catalogue from '../model/catalogue.js';
-import { sendEmail } from '../services/emailService.js';
+import { sendClientOrderConfirmationEmail, sendDesignerNewOrderEmail } from '../services/emailService.js';
 
 
 export const initializePayment = async (req, res) => {
@@ -98,36 +98,27 @@ export const webhookHandler = async (req, res) => {
 
 				// Send email notifications
 				try {
-          // Notify client
-          if (updatedOrder?.userId?.email) {
-            await sendEmail({
-              to: updatedOrder.userId.email,
-              template: 'orderConfirmation',
-              data: {
-                customerName: updatedOrder.userId.fullName,
-                orderId: updatedOrder._id,
-                designName: updatedOrder.catalogueId?.title || 'Custom Design',
-                amount: updatedOrder.total,
-              },
-            });
-          }
+					const orderDetails = {
+						orderId: updatedOrder._id,
+						designName: updatedOrder.catalogueId?.title || 'Custom Design',
+						amount: updatedOrder.total,
+						status: updatedOrder.status,
+						paymentStatus: updatedOrder.paymentStatus,
+						measurements: updatedOrder.measurements,
+						customizationRequest: updatedOrder.customizationRequest,
+						customerName: updatedOrder.userId?.fullName || 'Client',
+						customerEmail: updatedOrder.userId?.email || '',
+						designerName: updatedOrder.designerId?.fullName || 'Unassigned',
+						currency: process.env.CURRENCY_SYMBOL || '₦',
+					};
 
-          // Notify designer if assigned
-          if (updatedOrder?.designerId?.email) {
-            await sendEmail({
-              to: updatedOrder.designerId.email,
-              template: 'designerOrderNotification',
-              data: {
-                designerName: updatedOrder.designerId.fullName,
-                orderId: updatedOrder._id,
-                customerName: updatedOrder.userId.fullName,
-                designName: updatedOrder.catalogueId?.title || 'Custom Design',
-                amount: updatedOrder.total,
-                measurements: updatedOrder.measurements,
-                customizationRequest: updatedOrder.customizationRequest,
-              },
-            });
-          }
+					if (updatedOrder?.userId?.email) {
+						await sendClientOrderConfirmationEmail(updatedOrder.userId.email, updatedOrder.userId.fullName, orderDetails);
+					}
+
+					if (updatedOrder?.designerId?.email) {
+						await sendDesignerNewOrderEmail(updatedOrder.designerId.email, updatedOrder.designerId.fullName, orderDetails);
+					}
 				} catch (mailErr) {
 					console.error('Error sending notification emails:', mailErr);
 				}

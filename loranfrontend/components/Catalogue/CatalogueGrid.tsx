@@ -13,6 +13,8 @@ interface Props {
   items: CatalogueItem[];
 }
 
+type CatalogueGridItem = CatalogueItem & { image?: string };
+
 export default function CatalogueGrid({ items }: Props) {
   const [modalItem, setModalItem] = useState<CatalogueItem | null>(null);
 
@@ -30,8 +32,10 @@ export default function CatalogueGrid({ items }: Props) {
         animate="show"
       >
         {shuffled.map((item) => {
+          const catalogueItem = item as CatalogueGridItem;
           const designerName = typeof item.designer === 'object' && item.designer?.name ? item.designer.name : typeof item.designer === 'string' ? item.designer : 'Unknown';
           const designerId = typeof item.designer === 'object' && item.designer?.id ? item.designer.id : null;
+          const imagePath = item.imageUrl || catalogueItem.image || "/images/Hero.jpg";
 
           return (
           <motion.article
@@ -43,9 +47,9 @@ export default function CatalogueGrid({ items }: Props) {
             {/* Image */}
             <div className="relative aspect-[3/4] overflow-hidden rounded-xl" style={{ background: "var(--surface-2)" }}>
               <Image
-                src={item.imageUrl?.startsWith('/images/') 
-                  ? item.imageUrl 
-                  : `${process.env.NEXT_PUBLIC_BACKEND_URL}${item.imageUrl}`}
+                src={imagePath.startsWith('/images/') || imagePath.startsWith("http")
+                  ? imagePath
+                  : `${process.env.NEXT_PUBLIC_BACKEND_URL}${imagePath}`}
                 alt={item.title}
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-110"

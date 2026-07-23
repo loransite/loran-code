@@ -1,24 +1,31 @@
 // controllers/catalogueController.js
 import Catalogue from "../model/catalogue.js"; // adjust path/filename if different
+import User from "../model/user.js";
 import { storeUploadedImage } from '../services/imageStorage.js';
 
 export const createItem = async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, price, category } = req.body;
     if (!req.file) return res.status(400).json({ message: "Image required" });
+
+    // Fetch user to get fullName and designerStatus
+    const user = await User.findById(req.user.id).select('fullName designerStatus');
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const image = await storeUploadedImage(req.file, {
       folder: 'catalogue',
-      localUrl: `/uploads/${req.user.id}/${req.file.filename}`,
+      localUrl: `/uploads/${req.file.filename}`,
     });
 
     const item = new Catalogue({
       title,
       description,
-      price: 0, // or get from req.body
+      price: Number(price) || 0,
+      category: category || 'general',
       image,
-      designer: { id: req.user.id, name: req.user.name },
+      designer: { id: req.user.id, name: user.fullName || "Unknown" },
       uploadedBy: req.user.id,
+      status: user.designerStatus === 'approved' ? 'approved' : 'pending',
     });
 
     await item.save();

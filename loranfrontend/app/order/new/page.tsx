@@ -76,6 +76,7 @@ function NewOrderContent() {
   const handleCustomizationComplete = async (data: {
     customizationRequest: string;
     clientNotes: string;
+    shipping?: any;
   }) => {
     setOrderData((prev) => ({ ...prev, ...data }));
 
@@ -94,6 +95,7 @@ function NewOrderContent() {
           measurementMethod: orderData.measurementMethod,
           customizationRequest: data.customizationRequest,
           clientNotes: data.clientNotes,
+          shipping: data.shipping,
           total: orderData.designItem.price,
           status: "awaiting-payment",
         }),
@@ -104,7 +106,8 @@ function NewOrderContent() {
         setOrderData((prev) => ({ ...prev, orderId: result.order._id }));
         setStep("payment");
       } else {
-        alert("Failed to submit order. Please try again.");
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.message || "Failed to submit order. Please try again.");
       }
     } catch (error) {
       console.error("Error submitting order:", error);
@@ -222,10 +225,11 @@ function NewOrderContent() {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="w-12 h-12 text-green-600" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Order Submitted Successfully!</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Order Placed Successfully!</h2>
             <p className="text-gray-600 mb-8">
-              Thank you for your order! Our team will contact you shortly to discuss your requirements
-              in detail. Your order will then be assigned to the designer.
+              Thank you! Your order is now live. We've sent an email to the designer and our team with
+              all the details &mdash; the item, your measurements, and delivery info &mdash; and you'll
+              get a confirmation in your inbox too. The designer will review and confirm your order next.
             </p>
             <div className="space-y-3">
               <a

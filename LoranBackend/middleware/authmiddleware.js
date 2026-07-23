@@ -32,12 +32,26 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ message: "User no longer exists" });
     }
 
+    // If the account's tokenVersion changed (password reset, admin revoke,
+    // etc.) any previously issued JWT must stop working immediately.
+    if (
+      typeof user.tokenVersion === 'number' &&
+      typeof decoded.tokenVersion === 'number' &&
+      user.tokenVersion !== decoded.tokenVersion
+    ) {
+      return res.status(401).json({
+        message: "Your session is no longer valid. Please log in again.",
+        sessionInvalidated: true
+      });
+    }
+
     // Attach user info to request - use active role from token
     req.user = {
       id: decoded.id,
       role: decoded.role, // Active role for this session
       roles: decoded.roles || [decoded.role], // All roles user has
       email: decoded.email,
+      designerStatus: user.designerStatus, // Used by role middleware
     };
 
     next();

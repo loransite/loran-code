@@ -89,7 +89,12 @@ password: { type: String, required: true },
 	isEmailVerified: { type: Boolean, default: false },
 	emailVerificationToken: { type: String },
 	emailVerificationExpires: { type: Date },
-	
+
+	// Bumped whenever existing sessions must be invalidated
+	// (e.g. password reset, admin revokes designer access).
+	// Embedded in the JWT so a stale token is rejected by `protect`.
+	tokenVersion: { type: Number, default: 0 },
+
 	createdAt: { type: Date, default: Date.now }
 });
 

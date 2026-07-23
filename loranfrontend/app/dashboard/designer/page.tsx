@@ -173,6 +173,10 @@ const DesignerDashboard: React.FC = () => {
     revenue: orders.filter(o => o.paymentStatus === 'paid').reduce((acc, o) => acc + (o.total || 0), 0)
   };
 
+  const designCategories = Array.from(
+    new Set(designs.map((d: any) => d.category).filter(Boolean))
+  );
+
   return (
     <div className="dashboard-theme min-h-screen p-4 md:p-8">
       {/* Profile Header */}
@@ -297,6 +301,7 @@ const DesignerDashboard: React.FC = () => {
               setCategory={setCategory}
               setUploading={setUploading}
               onUpload={handleUpload}
+              categories={designCategories}
             />
           </section>
         </div>

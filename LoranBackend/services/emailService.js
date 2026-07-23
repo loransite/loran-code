@@ -616,6 +616,260 @@ export const sendDesignerApprovalEmail = async (email, fullName) => {
  * @param {string} fullName - User's full name
  * @param {string} token - New verification token
  */
+/**
+ * Render a consistent block of order details for notification emails.
+ */
+const formatOrderDetailsHtml = (orderDetails, { showCustomer = false } = {}) => {
+  const currency = orderDetails.currency || '₦';
+  const rows = [];
+
+  rows.push(`<div class="detail-row"><span><strong>Order ID:</strong></span><span>${orderDetails.orderId}</span></div>`);
+  rows.push(`<div class="detail-row"><span><strong>Design:</strong></span><span>${orderDetails.designName}</span></div>`);
+  rows.push(`<div class="detail-row"><span><strong>Amount:</strong></span><span>${currency}${Number(orderDetails.amount || 0).toLocaleString()}</span></div>`);
+  rows.push(`<div class="detail-row"><span><strong>Order status:</strong></span><span>${orderDetails.status}</span></div>`);
+  rows.push(`<div class="detail-row"><span><strong>Payment:</strong></span><span>${orderDetails.paymentStatus}</span></div>`);
+
+  if (showCustomer && orderDetails.customerName) {
+    rows.push(`<div class="detail-row"><span><strong>Customer:</strong></span><span>${orderDetails.customerName}${orderDetails.customerEmail ? ` (${orderDetails.customerEmail})` : ''}</span></div>`);
+  }
+  if (showCustomer && orderDetails.designerName) {
+    rows.push(`<div class="detail-row"><span><strong>Designer:</strong></span><span>${orderDetails.designerName}</span></div>`);
+  }
+
+  if (orderDetails.measurements) {
+    const labels = {
+      height: 'Height', chest: 'Chest', waist: 'Waist', hips: 'Hips',
+      shoulder: 'Shoulder', sleeveLength: 'Sleeve', inseam: 'Inseam', notes: 'Notes',
+    };
+    const parts = Object.entries(orderDetails.measurements)
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${labels[k] || k}: ${v}`);
+    if (parts.length) {
+      rows.push(`<div class="detail-row"><span><strong>Measurements:</strong></span><span>${parts.join(', ')}</span></div>`);
+    }
+  }
+
+  if (orderDetails.shipping && (orderDetails.shipping.address || orderDetails.shipping.name)) {
+    const s = orderDetails.shipping;
+    const parts = [s.name, s.phone, s.address, s.city, s.country].filter(Boolean).join(', ');
+    rows.push(`<div class="detail-row"><span><strong>Shipping:</strong></span><span>${parts}</span></div>`);
+  }
+
+  if (orderDetails.customizationRequest) {
+    rows.push(`<div class="detail-row"><span><strong>Customization:</strong></span><span>${orderDetails.customizationRequest}</span></div>`);
+  }
+  if (orderDetails.clientNotes) {
+    rows.push(`<div class="detail-row"><span><strong>Notes:</strong></span><span>${orderDetails.clientNotes}</span></div>`);
+  }
+
+  return `<div class="order-details">${rows.join('')}</div>`;
+};
+
+/**
+ * Safely resolve a frontend dashboard URL (never throws in misconfigured envs).
+ */
+const safeDashboardUrl = (path) => {
+  try {
+    return `${getFrontendBaseUrl()}${path}`;
+  } catch {
+    return `http://localhost:3000${path}`;
+  }
+};
+
+/**
+ * Notify the DESIGNER that a new (pending) order was placed.
+ */
+export const sendDesignerNewOrderEmail = async (email, fullName, orderDetails) => {
+  const transporter = createTransporter();
+  if (!transporter) {
+    console.log(`📧 [DEV MODE] New-order notification would be sent to designer: ${email}`);
+    return { success: true, devMode: true };
+  }
+
+  const dashboardUrl = safeDashboardUrl('/dashboard/designer');
+  const html = `
+    <!DOCTYPE html><html><head><style>
+      body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg,#667eea,#764ba2); margin:0; padding:20px; }
+      .container { max-width:600px; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+      .header { background:linear-gradient(135deg,#667eea,#764ba2); padding:36px; text-align:center; }
+      .header h1 { color:#fff; margin:0; font-size:28px; }
+      .content { padding:36px; color:#333; line-height:1.6; }
+      .order-details { background:#f8f9fa; padding:20px; border-radius:8px; margin:20px 0; }
+      .detail-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; gap:12px; }
+      .detail-row span:last-child { text-align:right; }
+      .button { display:inline-block; padding:14px 32px; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff!important; text-decoration:none; border-radius:50px; font-weight:600; }
+      .footer { background:#f8f9fa; padding:24px; text-align:center; color:#999; font-size:14px; border-top:1px solid #e9ecef; }
+    </style></head><body>
+      <div class="container">
+        <div class="header"><h1>🧵 New Order Received</h1></div>
+        <div class="content">
+          <p>Hi ${fullName}, you have a <strong>new pending order</strong> from ${orderDetails.customerName || 'a client'}!</p>
+          <p>Please review the details below and confirm the order from your dashboard.</p>
+          ${formatOrderDetailsHtml(orderDetails, { showCustomer: true })}
+          <p style="text-align:center; margin:24px 0;">
+            <a class="button" href="${dashboardUrl}">Open Designer Dashboard</a>
+          </p>
+        </div>
+        <div class="footer">Loran Fashion Platform · Connecting designers and clients</div>
+      </div>
+    </body></html>`;
+
+  try {
+    const info = await transporter.sendMail({ from: getFromAddress(), to: email, subject: `🧵 New Order Received — ${orderDetails.designName}`, html });
+    console.log(`✅ Designer new-order email sent to ${email}`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending designer new-order email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Notify the ADMIN that a new (pending) order was placed.
+ */
+export const sendAdminNewOrderEmail = async (email, orderDetails) => {
+  const transporter = createTransporter();
+  if (!transporter) {
+    console.log(`📧 [DEV MODE] New-order notification would be sent to admin: ${email}`);
+    return { success: true, devMode: true };
+  }
+
+  const dashboardUrl = safeDashboardUrl('/dashboard/admin');
+  const html = `
+    <!DOCTYPE html><html><head><style>
+      body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg,#667eea,#764ba2); margin:0; padding:20px; }
+      .container { max-width:600px; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+      .header { background:linear-gradient(135deg,#0E2A22,#1B4035); color:#E8DCC0; padding:36px; text-align:center; }
+      .header h1 { margin:0; font-size:28px; }
+      .content { padding:36px; color:#333; line-height:1.6; }
+      .order-details { background:#f8f9fa; padding:20px; border-radius:8px; margin:20px 0; }
+      .detail-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; gap:12px; }
+      .detail-row span:last-child { text-align:right; }
+      .button { display:inline-block; padding:14px 32px; background:#0E2A22; color:#E8DCC0!important; text-decoration:none; border-radius:50px; font-weight:700; }
+      .footer { background:#f8f9fa; padding:24px; text-align:center; color:#999; font-size:14px; border-top:1px solid #e9ecef; }
+    </style></head><body>
+      <div class="container">
+        <div class="header"><h1>🔔 New Pending Order</h1></div>
+        <div class="content">
+          <p>A new order has been placed on Loran and is awaiting attention.</p>
+          ${formatOrderDetailsHtml(orderDetails, { showCustomer: true })}
+          <p style="text-align:center; margin:24px 0;">
+            <a class="button" href="${dashboardUrl}">Review in Admin Dashboard</a>
+          </p>
+        </div>
+        <div class="footer">Loran Fashion Platform · Admin Notification</div>
+      </div>
+    </body></html>`;
+
+  try {
+    const info = await transporter.sendMail({ from: getFromAddress(), to: email, subject: `🔔 New Pending Order — ${orderDetails.designName}`, html });
+    console.log(`✅ Admin new-order email sent to ${email}`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending admin new-order email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Confirm to the CLIENT that their order was placed.
+ */
+export const sendClientOrderConfirmationEmail = async (email, fullName, orderDetails) => {
+  const transporter = createTransporter();
+  if (!transporter) {
+    console.log(`📧 [DEV MODE] Order confirmation would be sent to client: ${email}`);
+    return { success: true, devMode: true };
+  }
+
+  const dashboardUrl = safeDashboardUrl('/dashboard/client');
+  const html = `
+    <!DOCTYPE html><html><head><style>
+      body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg,#667eea,#764ba2); margin:0; padding:20px; }
+      .container { max-width:600px; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+      .header { background:linear-gradient(135deg,#667eea,#764ba2); padding:36px; text-align:center; }
+      .header h1 { color:#fff; margin:0; font-size:28px; }
+      .content { padding:36px; color:#333; line-height:1.6; }
+      .order-details { background:#f8f9fa; padding:20px; border-radius:8px; margin:20px 0; }
+      .detail-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; gap:12px; }
+      .detail-row span:last-child { text-align:right; }
+      .button { display:inline-block; padding:14px 32px; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff!important; text-decoration:none; border-radius:50px; font-weight:600; }
+      .footer { background:#f8f9fa; padding:24px; text-align:center; color:#999; font-size:14px; border-top:1px solid #e9ecef; }
+    </style></head><body>
+      <div class="container">
+        <div class="header"><h1>✅ Order Received</h1></div>
+        <div class="content">
+          <p>Hi ${fullName}, thank you! We've received your order and notified the designer and our team.</p>
+          <p>Here are your order details:</p>
+          ${formatOrderDetailsHtml(orderDetails, { showCustomer: false })}
+          <p style="text-align:center; margin:24px 0;">
+            <a class="button" href="${dashboardUrl}">View My Orders</a>
+          </p>
+        </div>
+        <div class="footer">Loran Fashion Platform · Connecting designers and clients</div>
+      </div>
+    </body></html>`;
+
+  try {
+    const info = await transporter.sendMail({ from: getFromAddress(), to: email, subject: `✅ We've received your order — ${orderDetails.designName}`, html });
+    console.log(`✅ Client order-confirmation email sent to ${email}`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending client order-confirmation email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Notify the CLIENT when their order status changes (processing, completed, etc.).
+ */
+export const sendOrderStatusUpdateEmail = async (email, fullName, orderDetails) => {
+  const transporter = createTransporter();
+  if (!transporter) {
+    console.log(`📧 [DEV MODE] Order status update would be sent to: ${email}`);
+    return { success: true, devMode: true };
+  }
+
+  const dashboardUrl = safeDashboardUrl('/dashboard/client');
+  const html = `
+    <!DOCTYPE html><html><head><style>
+      body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg,#667eea,#764ba2); margin:0; padding:20px; }
+      .container { max-width:600px; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+      .header { background:linear-gradient(135deg,#667eea,#764ba2); padding:36px; text-align:center; }
+      .header h1 { color:#fff; margin:0; font-size:28px; }
+      .content { padding:36px; color:#333; line-height:1.6; }
+      .status-badge { display:inline-block; padding:8px 16px; border-radius:20px; font-weight:bold; background:#667eea; color:#fff; }
+      .order-details { background:#f8f9fa; padding:20px; border-radius:8px; margin:20px 0; }
+      .detail-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; gap:12px; }
+      .detail-row span:last-child { text-align:right; }
+      .button { display:inline-block; padding:14px 32px; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff!important; text-decoration:none; border-radius:50px; font-weight:600; }
+      .footer { background:#f8f9fa; padding:24px; text-align:center; color:#999; font-size:14px; border-top:1px solid #e9ecef; }
+    </style></head><body>
+      <div class="container">
+        <div class="header"><h1>📦 Order Update</h1></div>
+        <div class="content">
+          <p>Hi ${fullName}, your order status has been updated.</p>
+          <p style="text-align:center;"><span class="status-badge">${orderDetails.status?.toUpperCase()}</span></p>
+          ${formatOrderDetailsHtml(orderDetails, { showCustomer: false })}
+          ${orderDetails.message ? `<p>${orderDetails.message}</p>` : ''}
+          ${orderDetails.designerNotes ? `<p><strong>Designer's note:</strong> ${orderDetails.designerNotes}</p>` : ''}
+          <p style="text-align:center; margin:24px 0;">
+            <a class="button" href="${dashboardUrl}">View My Orders</a>
+          </p>
+        </div>
+        <div class="footer">Loran Fashion Platform · Connecting designers and clients</div>
+      </div>
+    </body></html>`;
+
+  try {
+    const info = await transporter.sendMail({ from: getFromAddress(), to: email, subject: `📦 Order Update — ${orderDetails.status}`, html });
+    console.log(`✅ Order status-update email sent to ${email}`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending order status-update email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 export const resendVerificationEmail = async (email, fullName, token) => {
   const transporter = createTransporter();
   

@@ -30,11 +30,42 @@ interface AnalyticsData {
   recentOrders: {
     id: string;
     client: string;
+    clientEmail: string;
     total: number;
     status: string;
     paymentStatus: string;
     createdAt: string;
+    measurements: any;
+    measurementMethod: string | null;
+    designer: string;
+    customizationRequest: string | null;
   }[];
+  recentClients: {
+    id: string;
+    fullName: string;
+    email: string;
+    phone: string | null;
+    city: string | null;
+    createdAt: string;
+    isEmailVerified: boolean;
+    measurementHistory: number;
+  }[];
+  pendingDesignersList: {
+    id: string;
+    fullName: string;
+    email: string;
+    phone: string | null;
+    brandName: string | null;
+    city: string | null;
+    createdAt: string;
+    isEmailVerified: boolean;
+  }[];
+  measurementStats: {
+    totalOrdersWithMeasurements: number;
+    manualMeasurements: number;
+    aiMeasurements: number;
+    averageHeight: number;
+  };
 }
 
 // ─── Mini sparkline (pure CSS bar chart) ──────────────────────────────────────
@@ -252,7 +283,8 @@ export default function AnalyticsTab() {
 
   const { summary, orderStatusBreakdown, paymentBreakdown, dailyTrend,
           userGrowth, userRoles, designerStatus, topDesigners,
-          catalogueByStatus, recentOrders } = data;
+          catalogueByStatus, recentOrders, recentClients, pendingDesignersList,
+          measurementStats } = data;
 
   const last14Revenue = dailyTrend.slice(-14).map((d) => d.revenue);
   const last14Orders  = dailyTrend.slice(-14).map((d) => d.orders);
@@ -559,7 +591,18 @@ export default function AnalyticsTab() {
                       {String(order.id).slice(-8).toUpperCase()}
                     </span>
                   </td>
-                  <td className="px-5 py-3" style={{ color: "var(--text)" }}>{order.client}</td>
+                  <td className="px-5 py-3">
+                    <div>
+                      <div style={{ color: "var(--text)" }}>{order.client}</div>
+                      {order.measurements && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="text-[10px]" style={{ color: "var(--muted)" }}>
+                            {order.measurementMethod === 'ai' ? 'AI' : 'Manual'} measurements
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-5 py-3">
                     <span style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--highlight)" }}>
                       ₦{(order.total || 0).toLocaleString()}
@@ -576,6 +619,175 @@ export default function AnalyticsTab() {
               ))}
             </tbody>
           </table>
+        </div>
+      </motion.div>
+
+      {/* ── Recent client registrations ─────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+        className="rounded-2xl overflow-hidden"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
+      >
+        <div className="p-5 border-b flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
+          <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--highlight)" }}>Recent Client Registrations</p>
+          <span className="text-xs" style={{ color: "var(--muted)" }}>Latest 10</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                {["Name", "Email", "Phone", "City", "Verified", "Measurements", "Joined"].map((h) => (
+                  <th
+                    key={h}
+                    className="text-left px-5 py-3 text-[11px] uppercase tracking-widest font-semibold"
+                    style={{ color: "var(--muted)" }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {recentClients.map((client, i) => (
+                <tr
+                  key={client.id}
+                  style={{
+                    borderBottom: i < recentClients.length - 1 ? "1px solid var(--border)" : "none",
+                  }}
+                >
+                  <td className="px-5 py-3" style={{ color: "var(--text)" }}>{client.fullName}</td>
+                  <td className="px-5 py-3">
+                    <span style={{ fontFamily: "monospace", color: "var(--muted)", fontSize: "11px" }}>
+                      {client.email}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3" style={{ color: "var(--text)" }}>{client.phone || '-'}</td>
+                  <td className="px-5 py-3" style={{ color: "var(--text)" }}>{client.city || '-'}</td>
+                  <td className="px-5 py-3">
+                    {client.isEmailVerified ? (
+                      <span style={{ color: "#6EBD8A", fontSize: "12px" }}>✓ Verified</span>
+                    ) : (
+                      <span style={{ color: "#F87171", fontSize: "12px" }}>✗ Pending</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3">
+                    <span style={{ fontFamily: "monospace", color: "var(--highlight)" }}>
+                      {client.measurementHistory}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3">
+                    <span style={{ fontFamily: "monospace", color: "var(--muted)", fontSize: "11px" }}>
+                      {new Date(client.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+
+      {/* ── Pending designer verification ───────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+        className="rounded-2xl overflow-hidden"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
+      >
+        <div className="p-5 border-b flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
+          <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--highlight)" }}>Pending Designer Verification</p>
+          <span className="text-xs px-2 py-1 rounded-full" style={{ background: "rgba(232,220,192,0.12)", color: "var(--highlight)" }}>
+            {pendingDesignersList.length} pending
+          </span>
+        </div>
+        {pendingDesignersList.length === 0 ? (
+          <div className="p-8 text-center" style={{ color: "var(--muted)" }}>
+            No pending designer applications
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                  {["Name", "Brand", "Email", "Phone", "City", "Verified", "Applied"].map((h) => (
+                    <th
+                      key={h}
+                      className="text-left px-5 py-3 text-[11px] uppercase tracking-widest font-semibold"
+                      style={{ color: "var(--muted)" }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {pendingDesignersList.map((designer, i) => (
+                  <tr
+                    key={designer.id}
+                    style={{
+                      borderBottom: i < pendingDesignersList.length - 1 ? "1px solid var(--border)" : "none",
+                    }}
+                  >
+                    <td className="px-5 py-3" style={{ color: "var(--text)" }}>{designer.fullName}</td>
+                    <td className="px-5 py-3" style={{ color: "var(--highlight)" }}>{designer.brandName || '-'}</td>
+                    <td className="px-5 py-3">
+                      <span style={{ fontFamily: "monospace", color: "var(--muted)", fontSize: "11px" }}>
+                        {designer.email}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3" style={{ color: "var(--text)" }}>{designer.phone || '-'}</td>
+                    <td className="px-5 py-3" style={{ color: "var(--text)" }}>{designer.city || '-'}</td>
+                    <td className="px-5 py-3">
+                      {designer.isEmailVerified ? (
+                        <span style={{ color: "#6EBD8A", fontSize: "12px" }}>✓ Verified</span>
+                      ) : (
+                        <span style={{ color: "#F87171", fontSize: "12px" }}>✗ Pending</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3">
+                      <span style={{ fontFamily: "monospace", color: "var(--muted)", fontSize: "11px" }}>
+                        {new Date(designer.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </motion.div>
+
+      {/* ── Measurement statistics ─────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
+        className="rounded-2xl p-6"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
+      >
+        <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--highlight)", fontWeight: 600 }}>Measurement Analytics</p>
+        <div className="grid md:grid-cols-4 gap-4">
+          <div className="p-4 rounded-xl" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
+            <p className="text-2xl font-medium" style={{ fontFamily: "monospace", color: "var(--highlight)" }}>
+              {measurementStats.totalOrdersWithMeasurements}
+            </p>
+            <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: "var(--muted)" }}>Orders with Measurements</p>
+          </div>
+          <div className="p-4 rounded-xl" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
+            <p className="text-2xl font-medium" style={{ fontFamily: "monospace", color: "#7FB3FF" }}>
+              {measurementStats.manualMeasurements}
+            </p>
+            <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: "var(--muted)" }}>Manual Measurements</p>
+          </div>
+          <div className="p-4 rounded-xl" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
+            <p className="text-2xl font-medium" style={{ fontFamily: "monospace", color: "#6EBD8A" }}>
+              {measurementStats.aiMeasurements}
+            </p>
+            <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: "var(--muted)" }}>AI Measurements</p>
+          </div>
+          <div className="p-4 rounded-xl" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
+            <p className="text-2xl font-medium" style={{ fontFamily: "monospace", color: "#C4A87A" }}>
+              {measurementStats.averageHeight.toFixed(1)}cm
+            </p>
+            <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: "var(--muted)" }}>Average Height</p>
+          </div>
         </div>
       </motion.div>
 
